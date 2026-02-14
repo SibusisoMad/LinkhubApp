@@ -1,0 +1,6 @@
+@LinkHub.API_HostAddress = http://localhost:5191
+
+GET {{LinkHub.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

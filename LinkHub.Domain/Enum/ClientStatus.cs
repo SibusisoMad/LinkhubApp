@@ -1,0 +1,8 @@
+namespace LinkHub.Domain.Enum
+{
+    public enum ClientStatus
+    {
+        Active = 1,
+        Inactive = 2
+    }
+}
