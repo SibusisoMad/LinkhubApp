@@ -25,12 +25,19 @@ namespace LinkHub.Infrastructure.Database
                 entity.Property(c => c.ClientCode).IsRequired().HasMaxLength(6);
 
                 entity.HasIndex(c => c.ClientCode).IsUnique(); // ClientCode must be unique
+                entity.Property(c => c.NoOfLinkedContacts).HasDefaultValue(0);
             });
 
             modelBuilder.Entity<Contact>(entity =>
             {
                 entity.HasKey(c => c.Id);
                 entity.Property(c => c.Name).IsRequired().HasMaxLength(100);
+                entity.Property(c => c.Surname).IsRequired().HasMaxLength(100);
+                entity.Property(c => c.Email).IsRequired().HasMaxLength(200);
+                entity.HasIndex(c => c.Email).IsUnique();
+                entity.Property(c => c.NoOfLinkedClients).HasDefaultValue(0);
+                entity.Property(c => c.CreatedAt).IsRequired();
+                entity.Property(c => c.UpdatedAt).IsRequired();
             });
 
 

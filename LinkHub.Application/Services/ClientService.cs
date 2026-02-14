@@ -54,7 +54,7 @@ namespace LinkHub.Application.Services
 
         public async Task LinkContactAsync(int clientId, int contactId)
         {
-            // Check if client and contact exist
+            
             var client = await _clientRepository.GetByIdAsync(clientId);
             if (client == null)
                 throw new KeyNotFoundException("Client not found.");

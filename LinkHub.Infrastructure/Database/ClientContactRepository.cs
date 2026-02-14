@@ -64,6 +64,13 @@ namespace LinkHub.Infrastructure.Database
                 LinkedAt = DateTime.UtcNow
             };
             await _context.ClientContacts.AddAsync(clientContact);
+
+            var client = await _context.Clients.FirstOrDefaultAsync(c => c.Id == clientId);
+            if (client != null)
+            {
+                client.NoOfLinkedContacts = await _context.ClientContacts.CountAsync(cc => cc.ClientId == clientId) + 1;
+            }
+
             await _context.SaveChangesAsync();
         }
 
@@ -73,6 +80,14 @@ namespace LinkHub.Infrastructure.Database
             if (link != null)
             {
                 _context.ClientContacts.Remove(link);
+
+                var client = await _context.Clients.FirstOrDefaultAsync(c => c.Id == clientId);
+                if (client != null)
+                {
+                    client.NoOfLinkedContacts = await _context.ClientContacts.CountAsync(cc => cc.ClientId == clientId) - 1;
+                    if (client.NoOfLinkedContacts < 0) client.NoOfLinkedContacts = 0;
+                }
+
                 await _context.SaveChangesAsync();
             }
         }

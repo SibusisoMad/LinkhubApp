@@ -9,6 +9,7 @@ namespace LinkHub.Domain.Interfaces
         Task<Contact?> GetByIdAsync(int id);
         Task<IEnumerable<Contact>> GetAllAsync();
         Task AddAsync(Contact contact);
-        // Add more methods as needed for business rules
+        Task LinkClientAsync(int contactId, int clientId);
+        Task UnlinkClientAsync(int contactId, int clientId);
     }
 }

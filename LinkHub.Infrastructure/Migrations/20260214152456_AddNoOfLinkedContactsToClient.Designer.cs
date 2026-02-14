@@ -4,6 +4,7 @@ using LinkHub.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LinkHub.Infrastructure.Migrations
 {
     [DbContext(typeof(LinkHubDbContext))]
-    partial class LinkHubDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260214152456_AddNoOfLinkedContactsToClient")]
+    partial class AddNoOfLinkedContactsToClient
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,19 +49,19 @@ namespace LinkHub.Infrastructure.Migrations
                         {
                             ClientId = 1,
                             ContactId = 1,
-                            LinkedAt = new DateTime(2026, 2, 14, 16, 14, 59, 917, DateTimeKind.Utc).AddTicks(7107)
+                            LinkedAt = new DateTime(2026, 2, 14, 15, 24, 55, 126, DateTimeKind.Utc).AddTicks(9731)
                         },
                         new
                         {
                             ClientId = 1,
                             ContactId = 2,
-                            LinkedAt = new DateTime(2026, 2, 14, 16, 14, 59, 917, DateTimeKind.Utc).AddTicks(7109)
+                            LinkedAt = new DateTime(2026, 2, 14, 15, 24, 55, 126, DateTimeKind.Utc).AddTicks(9733)
                         },
                         new
                         {
                             ClientId = 2,
                             ContactId = 1,
-                            LinkedAt = new DateTime(2026, 2, 14, 16, 14, 59, 917, DateTimeKind.Utc).AddTicks(7110)
+                            LinkedAt = new DateTime(2026, 2, 14, 15, 24, 55, 126, DateTimeKind.Utc).AddTicks(9734)
                         });
                 });
 
@@ -118,19 +121,19 @@ namespace LinkHub.Infrastructure.Migrations
                         {
                             Id = 1,
                             ClientCode = "UDE001",
-                            CreatedAt = new DateTime(2026, 2, 14, 16, 14, 59, 917, DateTimeKind.Utc).AddTicks(7088),
+                            CreatedAt = new DateTime(2026, 2, 14, 15, 24, 55, 126, DateTimeKind.Utc).AddTicks(9713),
                             Name = "Udemy",
                             NoOfLinkedContacts = 0,
-                            UpdatedAt = new DateTime(2026, 2, 14, 16, 14, 59, 917, DateTimeKind.Utc).AddTicks(7093)
+                            UpdatedAt = new DateTime(2026, 2, 14, 15, 24, 55, 126, DateTimeKind.Utc).AddTicks(9719)
                         },
                         new
                         {
                             Id = 2,
                             ClientCode = "WTC002",
-                            CreatedAt = new DateTime(2026, 2, 14, 16, 14, 59, 917, DateTimeKind.Utc).AddTicks(7096),
+                            CreatedAt = new DateTime(2026, 2, 14, 15, 24, 55, 126, DateTimeKind.Utc).AddTicks(9722),
                             Name = "weThinkCode",
                             NoOfLinkedContacts = 0,
-                            UpdatedAt = new DateTime(2026, 2, 14, 16, 14, 59, 917, DateTimeKind.Utc).AddTicks(7096)
+                            UpdatedAt = new DateTime(2026, 2, 14, 15, 24, 55, 126, DateTimeKind.Utc).AddTicks(9723)
                         });
                 });
 
@@ -142,36 +145,12 @@ namespace LinkHub.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("NoOfLinkedClients")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<string>("Surname")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("Email")
-                        .IsUnique();
 
                     b.ToTable("Contacts");
 
@@ -179,22 +158,12 @@ namespace LinkHub.Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 2, 14, 16, 14, 59, 917, DateTimeKind.Utc).AddTicks(7101),
-                            Email = "dev@example.com",
-                            Name = "DEV",
-                            NoOfLinkedClients = 0,
-                            Surname = "Team",
-                            UpdatedAt = new DateTime(2026, 2, 14, 16, 14, 59, 917, DateTimeKind.Utc).AddTicks(7102)
+                            Name = "DEV"
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 2, 14, 16, 14, 59, 917, DateTimeKind.Utc).AddTicks(7105),
-                            Email = "qa@example.com",
-                            Name = "QA",
-                            NoOfLinkedClients = 0,
-                            Surname = "Team",
-                            UpdatedAt = new DateTime(2026, 2, 14, 16, 14, 59, 917, DateTimeKind.Utc).AddTicks(7105)
+                            Name = "QA"
                         });
                 });
 
