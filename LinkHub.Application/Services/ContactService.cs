@@ -47,16 +47,7 @@ namespace LinkHub.Application.Services
 
         public async Task<IEnumerable<Contact>> GetContactsAsync()
         {
-            var contacts = await _contactRepository.GetAllAsync();
-            
-            var fullNameContacts = contacts
-                .Select(c => {
-                    c.Name = $"{c.Surname}{c.Name}";
-                    return c;
-                })
-                .OrderBy(c => c.Name)
-                .ToList();
-            return fullNameContacts;
+            return await _contactRepository.GetAllAsync();
         }
 
         public async Task<Contact?> GetContactByIdAsync(int id)

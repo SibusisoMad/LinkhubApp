@@ -1,0 +1,34 @@
+@model IEnumerable<LinkHub.UI.Models.ClientListViewModel>
+
+@{
+    ViewData["Title"] = "Clients List";
+}
+
+<h2>Clients List</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info mt-4">No client(s) found.</div>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th class="text-start">Name</th>
+                <th class="text-start">Client code</th>
+                <th class="text-center">Number of linked contacts</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var client in Model)
+            {
+                <tr>
+                    <td class="text-start">@client.Name</td>
+                    <td class="text-start">@client.ClientCode</td>
+                    <td class="text-center">@client.NoOfLinkedContacts</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

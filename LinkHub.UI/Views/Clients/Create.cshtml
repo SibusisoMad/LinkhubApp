@@ -1,0 +1,49 @@
+@model LinkHub.UI.Models.ClientCreateViewModel
+
+@{
+    ViewData["Title"] = "Create Client";
+}
+
+
+<h2>Create Client</h2>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="successModal" class="modal" tabindex="-1" style="display:block; background:rgba(0,0,0,0.3);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-success text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title">Success</h5>
+                </div>
+                <div class="modal-body">
+                    <p>@TempData["SuccessMessage"]</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" onclick="closeModalAndRedirect()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function closeModalAndRedirect() {
+            document.getElementById('successModal').style.display = 'none';
+            window.location.href = '/Clients/List';
+        }
+        if (@(TempData["ShowModalAndRedirect"] != null ? "true" : "false")) {
+            setTimeout(closeModalAndRedirect, 2000);
+        }
+    </script>
+}
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="Name" class="control-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Create</button>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

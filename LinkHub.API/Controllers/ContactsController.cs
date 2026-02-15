@@ -60,7 +60,7 @@ namespace LinkHub.API.Controllers
         public async Task<IActionResult> LinkClient(int contactId, int clientId)
         {
             await _contactService.LinkClientAsync(contactId, clientId);
-            return NoContent();
+            return Ok(new {contactId,clientId});
         }
 
         [HttpDelete("{contactId}/unlink-client/{clientId}")]

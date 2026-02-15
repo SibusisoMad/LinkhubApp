@@ -1,0 +1,87 @@
+@model IEnumerable<LinkHub.UI.Models.ContactListViewModel>
+
+@{
+    ViewData["Title"] = "Contact List";
+}
+
+<h2>Contact List</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info mt-4">No contact(s) found.</div>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th class="text-start">Full Name</th>
+                <th class="text-start">Email address</th>
+                <th class="text-center">No. of linked clients</th>
+                <th class="text-start" style="width: 1%;"></th>     
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var contact in Model)
+            {
+                <tr>
+                    <td class="text-start">@contact.FullName</td>
+                    <td class="text-start">@contact.Email</td>
+                    <td class="text-center">@contact.NoOfLinkedClients</td>
+                    <td class="text-start">
+                        @if (contact.LinkedClients != null && contact.LinkedClients.Count > 0)
+                        {
+                            <div class="dropdown">
+                                <button class="btn btn-link dropdown-toggle p-0" type="button" id="dropdownMenuButton-@contact.ContactId" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Unlink
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-@contact.ContactId">
+                                    @foreach (var client in contact.LinkedClients)
+                                    {
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#confirmUnlinkModal" data-contact-id="@contact.ContactId" data-client-id="@client.ClientId" data-client-name="@client.ClientName">
+                                                @client.ClientName
+                                            </a>
+                                        </li>
+                                    <!-- Confirmation Modal -->
+                                    <div class="modal fade" id="confirmUnlinkModal" tabindex="-1" aria-labelledby="confirmUnlinkModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="confirmUnlinkModalLabel">Confirm Unlink</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Are you sure you want to unlink <span id="modalClientName" class="fw-bold"></span> from this contact?
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <a id="confirmUnlinkBtn" class="btn btn-danger" href="#">Unlink</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <script>
+                                        var confirmUnlinkModal = document.getElementById('confirmUnlinkModal');
+                                        confirmUnlinkModal.addEventListener('show.bs.modal', function (event) {
+                                            var button = event.relatedTarget;
+                                            var contactId = button.getAttribute('data-contact-id');
+                                            var clientId = button.getAttribute('data-client-id');
+                                            var clientName = button.getAttribute('data-client-name');
+                                            var modalClientName = document.getElementById('modalClientName');
+                                            var confirmBtn = document.getElementById('confirmUnlinkBtn');
+                                            modalClientName.textContent = clientName;
+                                            confirmBtn.href = `/Contacts/Unlink?contactId=${contactId}&clientId=${clientId}`;
+                                        });
+                                    </script>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

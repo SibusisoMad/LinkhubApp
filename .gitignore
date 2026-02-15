@@ -418,3 +418,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# VS Code settings (recommended to ignore user-specific settings)
+.vscode/

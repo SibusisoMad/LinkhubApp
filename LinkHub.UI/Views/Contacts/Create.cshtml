@@ -1,0 +1,57 @@
+@model LinkHub.UI.Models.ContactCreateViewModel
+
+@{
+    ViewData["Title"] = "Create Contact";
+}
+
+<h2>Create Contact</h2>
+
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="successModal" class="modal" tabindex="-1" style="display:block; background:rgba(0,0,0,0.3);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-success text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title">Success</h5>
+                </div>
+                <div class="modal-body">
+                    <p>@TempData["SuccessMessage"]</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" onclick="closeModalAndRedirect()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function closeModalAndRedirect() {
+            document.getElementById('successModal').style.display = 'none';
+            window.location.href = '/Contacts/List';
+        }
+    </script>
+}
+
+<form asp-action="Create" method="post" class="mt-4">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Surname" class="form-label"></label>
+        <input asp-for="Surname" class="form-control" />
+        <span asp-validation-for="Surname" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Create Contact</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
