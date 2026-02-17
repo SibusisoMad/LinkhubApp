@@ -14,17 +14,31 @@ namespace LinkHub.Infrastructure.Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+            modelBuilder.Entity<Client>()
+            .HasMany(c => c.Contacts);
+
+            modelBuilder.Entity<Client>()
+                .HasMany(c => c.Contacts)
+                .WithMany(c => c.Clients)
+                .UsingEntity<ClientContact>(
+                    j => j
+                        .HasOne(cc => cc.Contact)
+                        .WithMany()
+                        .HasForeignKey(cc => cc.ContactId),
+                    j => j
+                        .HasOne(cc => cc.Client)
+                        .WithMany()
+                        .HasForeignKey(cc => cc.ClientId));
+
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Client>(entity =>
             {
                 entity.HasKey(c => c.Id);
-
                 entity.Property(c => c.Name).IsRequired().HasMaxLength(200);
-
                 entity.Property(c => c.ClientCode).IsRequired().HasMaxLength(6);
-
-                entity.HasIndex(c => c.ClientCode).IsUnique(); // ClientCode must be unique
+                entity.HasIndex(c => c.ClientCode).IsUnique();
                 entity.Property(c => c.NoOfLinkedContacts).HasDefaultValue(0);
             });
 
@@ -40,28 +54,20 @@ namespace LinkHub.Infrastructure.Database
                 entity.Property(c => c.UpdatedAt).IsRequired();
             });
 
-
             modelBuilder.Entity<ClientContact>(entity =>
             {
-                
                 entity.HasKey(cc => new { cc.ClientId, cc.ContactId });
-
                 entity.Property(cc => cc.LinkedAt).IsRequired();
-
-                
                 entity
                     .HasOne(cc => cc.Client)
                     .WithMany(c => c.ClientContacts)
                     .HasForeignKey(cc => cc.ClientId)
                     .OnDelete(DeleteBehavior.Cascade);
-
-                
                 entity
                     .HasOne(cc => cc.Contact)
                     .WithMany(c => c.ClientContacts)
                     .HasForeignKey(cc => cc.ContactId)
                     .OnDelete(DeleteBehavior.Cascade);
-
                 entity.HasIndex(cc => cc.ClientId);
                 entity.HasIndex(cc => cc.ContactId);
             });

@@ -1,3 +1,5 @@
+// ...existing code...
+using LinkHub.UI.Models;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
@@ -5,7 +7,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using LinkHub.UI.Models;
 using LinkHub.UI.Models.Interfaces;
-// ...existing code...
 
 namespace LinkHub.UI.Services
 {
@@ -21,12 +22,14 @@ namespace LinkHub.UI.Services
         public async Task<List<ClientListViewModel>> GetClientsAsync()
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
+
             var response = await client.GetAsync("/api/clients");
+
             if (!response.IsSuccessStatusCode)
                 return new List<ClientListViewModel>();
 
             var json = await response.Content.ReadAsStringAsync();
-            var apiClients = JsonSerializer.Deserialize<List<ApiClientDto>>(
+            var apiClients = JsonSerializer.Deserialize<List<Client>>(
                 json,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
@@ -36,6 +39,7 @@ namespace LinkHub.UI.Services
                 : apiClients
                     .Select(c => new ClientListViewModel
                     {
+                        Id = c.Id, 
                         Name = c.Name,
                         ClientCode = c.ClientCode,
                         NoOfLinkedContacts = c.NoOfLinkedContacts,
@@ -46,6 +50,7 @@ namespace LinkHub.UI.Services
         public async Task<bool> CreateClientAsync(string name)
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
+
             var content = new StringContent(
                 JsonSerializer.Serialize(name),
                 Encoding.UTF8,
@@ -63,24 +68,35 @@ namespace LinkHub.UI.Services
                 return null;
 
             var json = await response.Content.ReadAsStringAsync();
-            var apiClient = JsonSerializer.Deserialize<ApiClientDto>(
+            var apiClient = JsonSerializer.Deserialize<Client>(
                 json,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
             if (apiClient == null)
                 return null;
 
-            // Linked contacts (already strongly-typed)
-            var linkedContacts = apiClient.Contacts ?? new List<LinkedContactInfo>();
+            var contactsJson = JsonSerializer.Serialize(apiClient.Contacts);
+            var apiContacts = JsonSerializer.Deserialize<List<ContactDto>>(
+                contactsJson,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+            var linkedContacts = apiContacts != null
+                ? apiContacts.Select(c => new LinkedContactInfo
+                    {
+                        ContactId = c.Id,
+                        FullName = $"{c.Name} {c.Surname}",
+                        Email = c.Email
+                    }).ToList()
+                : new List<LinkedContactInfo>();
 
-            // Get all contacts for dropdown
+     
             var allContactsResponse = await client.GetAsync("/api/contacts");
             var allContactsJson = await allContactsResponse.Content.ReadAsStringAsync();
             var allContacts =
-                JsonSerializer.Deserialize<List<ApiContactDto>>(
+                JsonSerializer.Deserialize<List<Contact>>(
                     allContactsJson,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                ) ?? new List<ApiContactDto>();
+                ) ?? new List<Contact>();
 
             var availableContacts = allContacts
                 .Where(c => !linkedContacts.Any(lc => lc.ContactId == c.Id))

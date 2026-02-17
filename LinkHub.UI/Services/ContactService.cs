@@ -30,14 +30,19 @@ namespace LinkHub.UI.Services
         public async Task<List<ContactListViewModel>> GetContactsAsync()
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
+
             var response = await client.GetAsync("/api/contacts");
+
             if (!response.IsSuccessStatusCode)
                 return new List<ContactListViewModel>();
+
             var json = await response.Content.ReadAsStringAsync();
-            var apiContacts = JsonSerializer.Deserialize<List<ApiContactDto>>(
+
+            var apiContacts = JsonSerializer.Deserialize<List<Contact>>(
                 json,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
+
             return apiContacts?.Select(c => new ContactListViewModel
             {
                 ContactId = c.Id,

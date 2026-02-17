@@ -72,7 +72,15 @@ namespace LinkHub.UI.Controllers
         [HttpPost]
         public async Task<IActionResult> LinkContact(int clientId, int contactId)
         {
-            await _clientService.LinkContactAsync(clientId, contactId);
+            try
+            {
+                await _clientService.LinkContactAsync(clientId, contactId);
+                TempData["LinkSuccess"] = "Contact linked successfully.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["LinkError"] = ex.Message;
+            }
             return RedirectToAction("Edit", new { id = clientId });
         }
 

@@ -56,7 +56,7 @@ namespace LinkHub.Infrastructure.Database
         public async Task LinkAsync(int clientId, int contactId)
         {
             if (await IsLinkedAsync(clientId, contactId))
-                return;
+                throw new InvalidOperationException("Contact is already linked to this client.");
             var clientContact = new ClientContact
             {
                 ClientId = clientId,
@@ -64,14 +64,14 @@ namespace LinkHub.Infrastructure.Database
                 LinkedAt = DateTime.UtcNow
             };
             await _context.ClientContacts.AddAsync(clientContact);
-
+            
             var client = await _context.Clients.FirstOrDefaultAsync(c => c.Id == clientId);
             if (client != null)
             {
-                client.NoOfLinkedContacts = await _context.ClientContacts.CountAsync(cc => cc.ClientId == clientId) + 1;
+                client.NoOfLinkedContacts = await _context.ClientContacts.CountAsync(cc => cc.ClientId == clientId);
+    
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
         }
 
         public async Task UnlinkAsync(int clientId, int contactId)
@@ -80,15 +80,15 @@ namespace LinkHub.Infrastructure.Database
             if (link != null)
             {
                 _context.ClientContacts.Remove(link);
+                await _context.SaveChangesAsync(); // Remove the link first
 
                 var client = await _context.Clients.FirstOrDefaultAsync(c => c.Id == clientId);
                 if (client != null)
                 {
-                    client.NoOfLinkedContacts = await _context.ClientContacts.CountAsync(cc => cc.ClientId == clientId) - 1;
-                    if (client.NoOfLinkedContacts < 0) client.NoOfLinkedContacts = 0;
+                    client.NoOfLinkedContacts = await _context.ClientContacts.CountAsync(cc => cc.ClientId == clientId);
+                    await _context.SaveChangesAsync();
                 }
-
-                await _context.SaveChangesAsync();
+                
             }
         }
     }

@@ -1,7 +1,7 @@
 using LinkHub.Application.Interfaces;
-using LinkHub.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using LinkHub.Application.Dtos;
 
 namespace LinkHub.API.Controllers
 {
@@ -9,7 +9,6 @@ namespace LinkHub.API.Controllers
     [Route("api/[controller]")]
     public class ClientsController : ControllerBase
     {
-    
         private readonly IClientService _clientService;
 
         public ClientsController(IClientService clientService)
@@ -18,26 +17,26 @@ namespace LinkHub.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Client>> CreateClient([FromBody] string name)
+        public async Task<ActionResult> CreateClient([FromBody] string name)
         {
             var client = await _clientService.CreateClientAsync(name);
             return CreatedAtAction(nameof(GetClientById), new { id = client.Id }, client);
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Client>>> GetClients()
+        public async Task<ActionResult<IEnumerable<ClientDto>>> GetClients()
         {
-            var clients = await _clientService.GetClientsAsync();
-            return Ok(clients);
+            var clientDtos = await _clientService.GetClientsAsync();
+            return Ok(clientDtos);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Client>> GetClientById(int id)
+        public async Task<ActionResult<ClientDto>> GetClientById(int id)
         {
-            var client = await _clientService.GetClientByIdAsync(id);
-            if (client == null)
+            var clientDto = await _clientService.GetClientByIdAsync(id);
+            if (clientDto == null)
                 return NotFound();
-            return client;
+            return clientDto;
         }
 
         [HttpPost("{clientId}/link-contact/{contactId}")]

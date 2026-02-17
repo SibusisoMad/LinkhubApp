@@ -7,7 +7,7 @@ namespace LinkHub.UI.Models
     {
         public int Id { get; set; }
         [Required]
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; }
         public List<LinkedContactInfo> LinkedContacts { get; set; } = new List<LinkedContactInfo>();
         public List<LinkedContactInfo> AvailableContacts { get; set; } = new List<LinkedContactInfo>();
     }
@@ -15,7 +15,7 @@ namespace LinkHub.UI.Models
     public class LinkedContactInfo
     {
         public int ContactId { get; set; }
-        public string FullName { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
+        public string? FullName { get; set; }
+        public string? Email { get; set; } 
     }
 }

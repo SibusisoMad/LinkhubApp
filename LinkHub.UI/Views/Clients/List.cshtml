@@ -24,7 +24,9 @@ else
             @foreach (var client in Model)
             {
                 <tr>
-                    <td class="text-start">@client.Name</td>
+                    <td class="text-start">
+                        <a href="/Clients/Edit?id=@client.Id">@client.Name</a>
+                    </td>
                     <td class="text-start">@client.ClientCode</td>
                     <td class="text-center">@client.NoOfLinkedContacts</td>
                 </tr>

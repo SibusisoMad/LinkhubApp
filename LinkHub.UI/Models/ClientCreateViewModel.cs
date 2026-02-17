@@ -4,6 +4,6 @@ namespace LinkHub.UI.Models
     public class ClientCreateViewModel
     {
         [Required(ErrorMessage = "Name is required")]
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; }
     }
 }

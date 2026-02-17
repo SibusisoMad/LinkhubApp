@@ -8,7 +8,7 @@
 
 <ul class="nav nav-tabs" id="clientTabs" role="tablist">
     <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="true">Details</button>
+        <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="true">Client</button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="contacts-tab" data-bs-toggle="tab" data-bs-target="#contacts" type="button" role="tab" aria-controls="contacts" aria-selected="false">Contact(s)</button>
@@ -23,7 +23,7 @@
                 <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
-            <button type="submit" class="btn btn-primary">Save</button>
+            <!-- Save button removed as requested -->
         </form>
     </div>
     <div class="tab-pane fade" id="contacts" role="tabpanel" aria-labelledby="contacts-tab">
@@ -33,6 +33,7 @@
             <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
+                        <th class="text-start">Contact Id</th>
                         <th class="text-start">Contact Full Name</th>
                         <th class="text-start">Contact Email</th>
                         <th class="text-start"></th>
@@ -42,6 +43,7 @@
                     @foreach (var contact in Model.LinkedContacts)
                     {
                         <tr>
+                            <td class="text-start">@contact.ContactId</td>
                             <td class="text-start">@contact.FullName</td>
                             <td class="text-start">@contact.Email</td>
                             <td class="text-start">
@@ -49,6 +51,24 @@
                             </td>
                         </tr>
                     }
+                        @if (TempData["LinkSuccess"] != null)
+                        {
+                            <div class="alert alert-success mt-2" id="linkSuccessAlert">
+                                @TempData["LinkSuccess"]
+                            </div>
+                            <script>
+                             
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    var contactsTab = document.getElementById('contacts-tab');
+                                    var tab = new bootstrap.Tab(contactsTab);
+                                    tab.show();
+                                    setTimeout(function () {
+                                        var alert = document.getElementById('linkSuccessAlert');
+                                        if (alert) alert.style.display = 'none';
+                                    }, 2000);
+                                });
+                            </script>
+                        }
                 </tbody>
             </table>
         }
@@ -57,25 +77,47 @@
             <div class="alert alert-info mt-2">No contacts found.</div>
         }
         <h4 class="mt-4">Link New Contact</h4>
-        @if (Model.AvailableContacts.Any())
+        @if (TempData["LinkError"] != null)
         {
-            <form asp-action="LinkContact" method="post" class="d-flex align-items-end">
-                <input type="hidden" name="clientId" value="@Model.Id" />
-                <div class="me-2">
-                    <select name="contactId" class="form-select">
-                        @foreach (var contact in Model.AvailableContacts)
+            <div class="modal fade" id="linkErrorModal" tabindex="-1" aria-labelledby="linkErrorModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="linkErrorModalLabel">Error</h5>
+                        </div>
+                        <div class="modal-body">
+                            @TempData["LinkError"]
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script>
+                var linkErrorModal = new bootstrap.Modal(document.getElementById('linkErrorModal'));
+                linkErrorModal.show();
+                setTimeout(function () {
+                    linkErrorModal.hide();
+                }, 1000);
+            </script>
+        }
+        <form asp-action="LinkContact" method="post" class="d-flex align-items-end">
+            <input type="hidden" name="clientId" value="@Model.Id" />
+            <div class="me-2">
+                <select name="contactId" class="form-select" @(Model.AvailableContacts.Any() ? "" : "disabled")>
+                    @if (Model.AvailableContacts.Any())
+                    {
+                        foreach (var contact in Model.AvailableContacts)
                         {
                             <option value="@contact.ContactId">@contact.FullName (@contact.Email)</option>
                         }
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-success">Link</button>
-            </form>
-        }
-        else
-        {
-            <div class="alert alert-info mt-2">No available contacts to link.</div>
-        }
+                    }
+                    else
+                    {
+                        <option disabled selected>No available contacts to link</option>
+                    }
+                </select>
+            </div>
+            <button type="submit" class="btn btn-success" @(Model.AvailableContacts.Any() ? "" : "disabled")>Link</button>
+        </form>
     </div>
 </div>
 @section Scripts {

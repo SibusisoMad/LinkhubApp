@@ -4,6 +4,7 @@ using LinkHub.Domain.Interfaces;
 using LinkHub.Domain.Services;
 using LinkHub.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,11 @@ builder.Services.AddDbContext<LinkHubDbContext>(options =>
 
 
 builder.Services.AddControllers();
+
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+});
 
 
 builder.Services.AddScoped<IClientService, ClientService>();

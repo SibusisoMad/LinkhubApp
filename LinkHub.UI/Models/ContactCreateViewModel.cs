@@ -6,15 +6,15 @@ namespace LinkHub.UI.Models
     {
         [Required]
         [Display(Name = "Name")]
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; }
 
         [Required]
         [Display(Name = "Surname")]
-        public string Surname { get; set; } = string.Empty;
+        public string? Surname { get; set; }
 
         [Required]
         [EmailAddress]
         [Display(Name = "Email address")]
-        public string Email { get; set; } = string.Empty;
+        public string? Email { get; set; }
     }
 }

@@ -1,9 +1,10 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using LinkHub.Domain.Models;
 using LinkHub.Domain.Interfaces;
 using LinkHub.Application.Interfaces;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Diagnostics.CodeAnalysis;
+using LinkHub.Application.Dtos;
+using System;
 
 namespace LinkHub.Application.Services
 {
@@ -42,14 +43,47 @@ namespace LinkHub.Application.Services
             return client;
         }
 
-        public Task<IEnumerable<Client>> GetClientsAsync()
+
+        public async Task<IEnumerable<ClientDto>> GetClientsAsync()
         {
-            return _clientRepository.GetAllAsync();
+            var clients = await _clientRepository.GetAllAsync();
+            return clients.Select(c => new ClientDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                ClientCode = c.ClientCode,
+                NoOfLinkedContacts = c.NoOfLinkedContacts,
+                Contacts = c.Contacts.Select(contact => new ContactDto
+                {
+                    Id = contact.Id,
+                    Name = contact.Name,
+                    Surname = contact.Surname,
+                    Email = contact.Email
+                }).ToList()
+            }).ToList();
         }
 
-        public Task<Client?> GetClientByIdAsync(int id)
+        public async Task<ClientDto?> GetClientByIdAsync(int id)
         {
-            return _clientRepository.GetByIdAsync(id);
+            var client = await _clientRepository.GetByIdAsync(id);
+
+            if (client == null)
+                return null;
+
+            return new ClientDto
+            {
+                Id = client.Id,
+                Name = client.Name,
+                ClientCode = client.ClientCode,
+                NoOfLinkedContacts = client.NoOfLinkedContacts,
+                Contacts = client.Contacts.Select(contact => new ContactDto
+                {
+                    Id = contact.Id,
+                    Name = contact.Name,
+                    Surname = contact.Surname,
+                    Email = contact.Email
+                }).ToList()
+            };
         }
 
         public async Task LinkContactAsync(int clientId, int contactId)
@@ -69,6 +103,7 @@ namespace LinkHub.Application.Services
         public async Task UnlinkContactAsync(int clientId, int contactId)
         {
             var client = await _clientRepository.GetByIdAsync(clientId);
+
             if (client == null)
                 throw new KeyNotFoundException("Client not found.");
 

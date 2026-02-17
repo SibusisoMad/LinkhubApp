@@ -1,9 +1,10 @@
 namespace LinkHub.UI.Models
 {
-    public class ApiClientDto
+    public class Client
     {
-        public string Name { get; set; } = string.Empty;
-        public string ClientCode { get; set; } = string.Empty;
+        public int Id { get; set; }
+        public string? Name { get; set; } 
+        public string? ClientCode { get; set; } 
         public int NoOfLinkedContacts { get; set; }
         public List<LinkedContactInfo>? Contacts { get; set; }
     }
