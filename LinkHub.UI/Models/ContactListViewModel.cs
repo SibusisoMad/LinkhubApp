@@ -9,9 +9,4 @@ namespace LinkHub.UI.Models
         public List<LinkedClientInfo> LinkedClients { get; set; } = new List<LinkedClientInfo>();
     }
 
-    public class LinkedClientInfo
-    {
-        public int ClientId { get; set; }
-        public string ClientName { get; set; }
-    }
 }

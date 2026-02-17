@@ -1,0 +1,93 @@
+@model LinkHub.UI.Models.ContactEditViewModel
+
+@{
+    ViewData["Title"] = "Contacts";
+}
+
+<h2>Contact</h2>
+
+<ul class="nav nav-tabs" id="contactTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="true">Contact</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="clients-tab" data-bs-toggle="tab" data-bs-target="#clients" type="button" role="tab" aria-controls="clients" aria-selected="false">Client(s)</button>
+    </li>
+</ul>
+<div class="tab-content mt-3" id="contactTabsContent">
+    <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="details-tab">
+        <form asp-action="Update" method="post">
+            <input type="hidden" asp-for="Id" />
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Surname" class="form-label"></label>
+                <input asp-for="Surname" class="form-control" />
+                <span asp-validation-for="Surname" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    </div>
+    <div class="tab-pane fade" id="clients" role="tabpanel" aria-labelledby="clients-tab">
+        <h4>Linked Clients</h4>
+        @if (Model.LinkedClients.Any())
+        {
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th class="text-start">Client Name</th>
+                        <th class="text-start">Client Code</th>
+                        <th class="text-start"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var client in Model.LinkedClients)
+                    {
+                        <tr>
+                            <td class="text-start">@client.ClientName</td>
+                            <td class="text-start">@client.ClientCode</td>
+                            <td class="text-start">
+                                <a href="/Contacts/Unlink?contactId=@Model.Id&clientId=@client.ClientId" class="text-danger">Unlink</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="alert alert-info mt-2">No clients found.</div>
+        }
+        <h4 class="mt-4">Link New Client</h4>
+        <form asp-action="LinkClient" method="post" class="d-flex align-items-end">
+            <div class="me-2">
+                <select id="clientIdSelect" name="clientId" class="form-select" @(Model.AvailableClients.Any() ? "" : "disabled")>
+                    @if (Model.AvailableClients.Any())
+                    {
+                        foreach (var client in Model.AvailableClients)
+                        {
+                            <option value="@client.ClientId">@client.ClientName (@client.ClientCode)</option>
+                        }
+                    }
+                    else
+                    {
+                        <option disabled selected>No available clients to link</option>
+                    }
+                </select>
+            </div>
+            <input type="hidden" name="contactId" value="@Model.Id" />
+            <button type="submit" class="btn btn-success" @(Model.AvailableClients.Any() ? "" : "disabled")>Link</button>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

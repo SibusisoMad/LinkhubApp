@@ -60,6 +60,21 @@ namespace LinkHub.Application.Services
             await _contactRepository.LinkClientAsync(contactId, clientId);
         }
 
+        public async Task<Contact> UpdateContactAsync(int id, Contact updatedContact)
+        {
+            var contact = await _contactRepository.GetByIdAsync(id);
+
+            contact.Name = updatedContact.Name;
+            contact.Surname = updatedContact.Surname;
+            contact.Email = updatedContact.Email;
+            contact.UpdatedAt = DateTime.UtcNow;
+
+            await _contactRepository.UpdateAsync(contact);
+
+            return contact;
+           
+        }
+
         public async Task UnlinkClientAsync(int contactId, int clientId)
         {
             await _contactRepository.UnlinkClientAsync(contactId, clientId);

@@ -11,5 +11,6 @@ namespace LinkHub.Domain.Interfaces
         Task AddAsync(Contact contact);
         Task LinkClientAsync(int contactId, int clientId);
         Task UnlinkClientAsync(int contactId, int clientId);
+        Task UpdateAsync(Contact contact);
     }
 }

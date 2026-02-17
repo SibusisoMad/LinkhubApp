@@ -17,7 +17,10 @@ namespace LinkHub.Infrastructure.Database
 
         public async Task<Contact?> GetByIdAsync(int id)
         {
-            return await _context.Contacts.FindAsync(id);
+            return await _context.Contacts
+                .Include(c => c.ClientContacts)
+                .ThenInclude(cc => cc.Client)
+                .FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task<IEnumerable<Contact>> GetAllAsync()
@@ -34,6 +37,12 @@ namespace LinkHub.Infrastructure.Database
             await _context.SaveChangesAsync();
         }
 
+        public async Task UpdateAsync(Contact contact)
+        {
+            _context.Contacts.Update(contact);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task LinkClientAsync(int contactId, int clientId)
         {
             if (await _context.ClientContacts.AnyAsync(cc => cc.ClientId == clientId && cc.ContactId == contactId))
@@ -46,6 +55,14 @@ namespace LinkHub.Infrastructure.Database
             };
             await _context.ClientContacts.AddAsync(clientContact);
             await _context.SaveChangesAsync();
+
+            
+            var contact = await _context.Contacts.FindAsync(contactId);
+            if (contact != null)
+            {
+                contact.NoOfLinkedClients = await _context.ClientContacts.CountAsync(cc => cc.ContactId == contactId);
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task UnlinkClientAsync(int contactId, int clientId)
@@ -55,6 +72,13 @@ namespace LinkHub.Infrastructure.Database
             {
                 _context.ClientContacts.Remove(clientContact);
                 await _context.SaveChangesAsync();
+
+                var contact = await _context.Contacts.FindAsync(contactId);
+                if (contact != null)
+                {
+                    contact.NoOfLinkedClients = await _context.ClientContacts.CountAsync(cc => cc.ContactId == contactId);
+                    await _context.SaveChangesAsync();
+                }
             }
         }
     }

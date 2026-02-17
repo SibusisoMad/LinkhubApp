@@ -80,7 +80,7 @@ namespace LinkHub.Infrastructure.Database
             if (link != null)
             {
                 _context.ClientContacts.Remove(link);
-                await _context.SaveChangesAsync(); // Remove the link first
+                await _context.SaveChangesAsync(); 
 
                 var client = await _context.Clients.FirstOrDefaultAsync(c => c.Id == clientId);
                 if (client != null)

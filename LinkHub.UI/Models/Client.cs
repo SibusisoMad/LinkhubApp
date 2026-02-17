@@ -6,6 +6,6 @@ namespace LinkHub.UI.Models
         public string? Name { get; set; } 
         public string? ClientCode { get; set; } 
         public int NoOfLinkedContacts { get; set; }
-        public List<LinkedContactInfo>? Contacts { get; set; }
+        public List<ContactDto>? Contacts { get; set; }
     }
 }

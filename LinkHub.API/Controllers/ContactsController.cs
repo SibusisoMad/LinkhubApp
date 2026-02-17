@@ -56,11 +56,19 @@ namespace LinkHub.API.Controllers
             return contact;
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateContact(int id, [FromBody] Contact updatedContact)
+        {
+            var result = await _contactService.UpdateContactAsync(id, updatedContact);
+            
+            return NoContent();
+        }
+
         [HttpPost("{contactId}/link-client/{clientId}")]
         public async Task<IActionResult> LinkClient(int contactId, int clientId)
         {
             await _contactService.LinkClientAsync(contactId, clientId);
-            return Ok(new {contactId,clientId});
+            return NoContent();
         }
 
         [HttpDelete("{contactId}/unlink-client/{clientId}")]

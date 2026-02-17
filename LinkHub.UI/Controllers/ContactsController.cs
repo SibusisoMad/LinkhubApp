@@ -33,8 +33,9 @@ namespace LinkHub.UI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(ContactCreateViewModel model)
         {
+
             if (!ModelState.IsValid)
-                return View(model);
+                return View("Edit", model);
 
             var success = await _contactService.CreateContactAsync(model);
             if (success)
@@ -50,11 +51,47 @@ namespace LinkHub.UI.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var model = await _contactService.GetContactEditViewModelAsync(id);
+            if (model == null)
+                return NotFound();
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Update(ContactUpdateViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var success = await _contactService.UpdateContactAsync(model);
+            if (success)
+            {
+                TempData["SuccessMessage"] = "Contact updated successfully.";
+                return RedirectToAction("List");
+            }
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Failed to update contact. Email may already exist or be invalid.");
+                return View("Edit", model);
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> LinkClient(int contactId, int clientId)
+        {
+            await _contactService.LinkClientAsync(contactId, clientId);
+            TempData["SuccessMessage"] = "Client linked successfully.";
+            return RedirectToAction("Edit", new { id = contactId });
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Unlink(int contactId, int clientId)
         {
             await _contactService.UnlinkClientAsync(contactId, clientId);
             TempData["SuccessMessage"] = "Client unlinked successfully.";
-            return RedirectToAction("List");
+            return RedirectToAction("Edit", new { id = contactId });
         }
     }
 }

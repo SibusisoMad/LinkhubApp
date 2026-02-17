@@ -75,19 +75,14 @@ namespace LinkHub.UI.Services
             if (apiClient == null)
                 return null;
 
-            var contactsJson = JsonSerializer.Serialize(apiClient.Contacts);
-            var apiContacts = JsonSerializer.Deserialize<List<ContactDto>>(
-                contactsJson,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-            );
-            var linkedContacts = apiContacts != null
-                ? apiContacts.Select(c => new LinkedContactInfo
-                    {
-                        ContactId = c.Id,
-                        FullName = $"{c.Name} {c.Surname}",
-                        Email = c.Email
-                    }).ToList()
-                : new List<LinkedContactInfo>();
+            var linkedContacts = apiClient.Contacts?
+                .Select(c => new LinkedContactInfo
+                {
+                    ContactId = c.Id,
+                    FullName = $"{c.Surname} {c.Name}",
+                    Email = c.Email
+                })
+                .ToList() ?? new List<LinkedContactInfo>();
 
      
             var allContactsResponse = await client.GetAsync("/api/contacts");

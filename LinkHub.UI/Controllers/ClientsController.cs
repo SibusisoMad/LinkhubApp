@@ -35,14 +35,14 @@ namespace LinkHub.UI.Controllers
         public async Task<IActionResult> Create(ClientCreateViewModel model)
         {
             if (!ModelState.IsValid)
-                return View(model);
+                return View("Edit",model);
 
             var success = await _clientService.CreateClientAsync(model.Name);
             if (success)
             {
                 TempData["SuccessMessage"] = "Client created";
                 TempData["ShowModalAndRedirect"] = true;
-                return RedirectToAction("Create");
+                return RedirectToAction("Create");  
             }
             else
             {
@@ -88,6 +88,7 @@ namespace LinkHub.UI.Controllers
         public async Task<IActionResult> UnlinkContact(int clientId, int contactId)
         {
             await _clientService.UnlinkContactAsync(clientId, contactId);
+            TempData["UnlinkSuccess"] = "Contact unlinking is successful.";
             return RedirectToAction("Edit", new { id = clientId });
         }
     }

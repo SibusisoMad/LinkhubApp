@@ -20,10 +20,27 @@
             <input type="hidden" asp-for="Id" />
             <div class="mb-3">
                 <label asp-for="Name" class="form-label"></label>
-                <input asp-for="Name" class="form-control" />
+                <input asp-for="Name" class="form-control" readonly />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
-            <!-- Save button removed as requested -->
+                    @if (TempData["UnlinkSuccess"] != null)
+                    {
+                        <div class="alert alert-success mt-2" id="unlinkSuccessAlert">
+                            @TempData["UnlinkSuccess"]
+                        </div>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                var contactsTab = document.getElementById('contacts-tab');
+                                var tab = new bootstrap.Tab(contactsTab);
+                                tab.show();
+                                setTimeout(function () {
+                                    var alert = document.getElementById('unlinkSuccessAlert');
+                                    if (alert) alert.style.display = 'none';
+                                }, 2000);
+                            });
+                        </script>
+                    }
+            
         </form>
     </div>
     <div class="tab-pane fade" id="contacts" role="tabpanel" aria-labelledby="contacts-tab">
@@ -33,7 +50,6 @@
             <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
-                        <th class="text-start">Contact Id</th>
                         <th class="text-start">Contact Full Name</th>
                         <th class="text-start">Contact Email</th>
                         <th class="text-start"></th>
@@ -43,7 +59,6 @@
                     @foreach (var contact in Model.LinkedContacts)
                     {
                         <tr>
-                            <td class="text-start">@contact.ContactId</td>
                             <td class="text-start">@contact.FullName</td>
                             <td class="text-start">@contact.Email</td>
                             <td class="text-start">
