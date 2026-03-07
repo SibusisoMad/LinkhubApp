@@ -64,14 +64,15 @@ namespace LinkHub.Infrastructure.Database
                 LinkedAt = DateTime.UtcNow
             };
             await _context.ClientContacts.AddAsync(clientContact);
-            
+
+
             var client = await _context.Clients.FirstOrDefaultAsync(c => c.Id == clientId);
             if (client != null)
             {
-                client.NoOfLinkedContacts = await _context.ClientContacts.CountAsync(cc => cc.ClientId == clientId);
-    
-                await _context.SaveChangesAsync();
-            }
+                client.NoOfLinkedContacts += 1;
+            }   
+
+            await _context.SaveChangesAsync();
         }
 
         public async Task UnlinkAsync(int clientId, int contactId)
