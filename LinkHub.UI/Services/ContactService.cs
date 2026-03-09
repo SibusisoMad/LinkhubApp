@@ -10,6 +10,12 @@ namespace LinkHub.UI.Services
     public class ContactService : IContactService
     {
         private readonly IHttpClientFactory _httpClientFactory;
+
+        private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
         public ContactService(IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
@@ -49,7 +55,7 @@ namespace LinkHub.UI.Services
 
             var apiContacts = JsonSerializer.Deserialize<List<Contact>>(
                 json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                JsonOptions
             );
 
             return apiContacts?.Select(c => new ContactListViewModel
@@ -69,7 +75,7 @@ namespace LinkHub.UI.Services
             var response = await client.DeleteAsync($"/api/contacts/{contactId}/unlink-client/{clientId}");
             response.EnsureSuccessStatusCode();
         }
-        public async Task<ContactEditViewModel> GetContactEditViewModelAsync(int id)
+        public async Task<ContactEditViewModel?> GetContactEditViewModelAsync(int id)
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
             var response = await client.GetAsync($"/api/contacts/{id}");
@@ -77,20 +83,34 @@ namespace LinkHub.UI.Services
                 return null;
 
             var json = await response.Content.ReadAsStringAsync();
-            var apiContact = JsonSerializer.Deserialize<Contact>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var apiContact = JsonSerializer.Deserialize<Contact>(json, JsonOptions);
             if (apiContact == null)
                 return null;
+
+            var linkedClients = apiContact.LinkedClients ?? new List<LinkedClientInfo>();
+            if (linkedClients.Count == 0 && apiContact.ClientContacts?.Count > 0)
+            {
+                linkedClients = apiContact.ClientContacts
+                    .Where(cc => cc.Client != null)
+                    .Select(cc => new LinkedClientInfo
+                    {
+                        ClientId = cc.ClientId,
+                        ClientName = cc.Client!.Name ?? string.Empty,
+                        ClientCode = cc.Client!.ClientCode ?? string.Empty,
+                    })
+                    .ToList();
+            }
 
             
             var clientsResponse = await client.GetAsync("/api/clients");
             var clientsJson = await clientsResponse.Content.ReadAsStringAsync();
-            var allClients = JsonSerializer.Deserialize<List<Client>>(clientsJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<Client>();
+            var allClients = JsonSerializer.Deserialize<List<Client>>(clientsJson, JsonOptions) ?? new List<Client>();
 
-            var linkedClientIds = apiContact.LinkedClients?.Select(lc => lc.ClientId).ToHashSet() ?? new HashSet<int>();
+            var linkedClientIds = linkedClients.Select(lc => lc.ClientId).ToHashSet();
 
             var availableClients = allClients
                 .Where(c => !linkedClientIds.Contains(c.Id))
-                .Select(c => new LinkedClientInfo { ClientId = c.Id, ClientName = c.Name, ClientCode = c.ClientCode })
+                .Select(c => new LinkedClientInfo { ClientId = c.Id, ClientName = c.Name ?? string.Empty, ClientCode = c.ClientCode ?? string.Empty })
                 .ToList();
 
             return new ContactEditViewModel
@@ -99,7 +119,7 @@ namespace LinkHub.UI.Services
                 Name = apiContact.Name,
                 Surname = apiContact.Surname,
                 Email = apiContact.Email,
-                LinkedClients = apiContact.LinkedClients ?? new List<LinkedClientInfo>(),
+                LinkedClients = linkedClients,
                 AvailableClients = availableClients
             };
         }

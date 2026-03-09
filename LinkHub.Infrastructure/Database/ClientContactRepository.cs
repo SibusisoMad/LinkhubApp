@@ -72,6 +72,12 @@ namespace LinkHub.Infrastructure.Database
                 client.NoOfLinkedContacts += 1;
             }   
 
+            var contact = await _context.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
+            if (contact != null)
+            {
+                contact.NoOfLinkedClients += 1;
+            }
+
             await _context.SaveChangesAsync();
         }
 
@@ -87,6 +93,13 @@ namespace LinkHub.Infrastructure.Database
                 if (client != null)
                 {
                     client.NoOfLinkedContacts = await _context.ClientContacts.CountAsync(cc => cc.ClientId == clientId);
+                    await _context.SaveChangesAsync();
+                }
+
+                var contact = await _context.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
+                if (contact != null)
+                {
+                    contact.NoOfLinkedClients = await _context.ClientContacts.CountAsync(cc => cc.ContactId == contactId);
                     await _context.SaveChangesAsync();
                 }
                 

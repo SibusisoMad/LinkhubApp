@@ -10,6 +10,7 @@ namespace LinkHub.Application.Interfaces
         Task<Client> CreateClientAsync(string name);
         Task<IEnumerable<ClientDto>> GetClientsAsync();
         Task<ClientDto?> GetClientByIdAsync(int id);
+        Task UpdateClientNameAsync(int id, string name);
         Task LinkContactAsync(int clientId, int contactId);
         Task UnlinkContactAsync(int clientId, int contactId);
     }

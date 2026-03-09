@@ -4,9 +4,9 @@
     ViewData["Title"] = "Contact List";
 }
 
-<h2>Contact List</h2>
+<h2>Contacts</h2>
 
-@if (!Model.Any())
+    @if (Model == null || !Model.Any())
 {
     <div class="alert alert-info mt-4">No contact(s) found.</div>
 }
@@ -17,8 +17,8 @@ else
             <tr>
                 <th class="text-start">Full Name</th>
                 <th class="text-start">Email address</th>
-                <th class="text-center">No. of linked clients</th>
-                <th class="text-start" style="width: 1%;"></th>     
+                <th class="text-center">Number of linked clients</th>
+                <th class="text-start w-auto"></th>
             </tr>
         </thead>
         <tbody>
@@ -26,15 +26,15 @@ else
             {
                 <tr>
                     <td class="text-start">
-                        <a href="/Contacts/Edit/@contact.ContactId" class="text-decoration-none">@contact.FullName</a>
+                        <a asp-controller="Contacts" asp-action="Edit" asp-route-id="@contact.ContactId" class="text-decoration-none">@contact.FullName</a>
                     </td>
                     <td class="text-start">@contact.Email</td>
                     <td class="text-center">@contact.NoOfLinkedClients</td>
-                    <td class="text-start">
+                    <td class="text-start text-nowrap">
                         @if (contact.LinkedClients != null && contact.LinkedClients.Count > 0)
                         {
                             <div class="dropdown">
-                                <button class="btn btn-link dropdown-toggle p-0" type="button" id="dropdownMenuButton-@contact.ContactId" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button class="btn btn-link dropdown-toggle p-0" type="button" id="dropdownMenuButton-@contact.ContactId" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     Unlink
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-@contact.ContactId">
@@ -45,37 +45,6 @@ else
                                                 @client.ClientName
                                             </a>
                                         </li>
-                                    <div class="modal fade" id="confirmUnlinkModal" tabindex="-1" aria-labelledby="confirmUnlinkModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="confirmUnlinkModalLabel">Confirm Unlink</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    Are you sure you want to unlink <span id="modalClientName" class="fw-bold"></span> from this contact?
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                    <a id="confirmUnlinkBtn" class="btn btn-danger" href="#">Unlink</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <script>
-                                        var confirmUnlinkModal = document.getElementById('confirmUnlinkModal');
-                                        confirmUnlinkModal.addEventListener('show.bs.modal', function (event) {
-                                            var button = event.relatedTarget;
-                                            var contactId = button.getAttribute('data-contact-id');
-                                            var clientId = button.getAttribute('data-client-id');
-                                            var clientName = button.getAttribute('data-client-name');
-                                            var modalClientName = document.getElementById('modalClientName');
-                                            var confirmBtn = document.getElementById('confirmUnlinkBtn');
-                                            modalClientName.textContent = clientName;
-                                            confirmBtn.href = `/Contacts/Unlink?contactId=${contactId}&clientId=${clientId}`;
-                                        });
-                                    </script>
                                     }
                                 </ul>
                             </div>
@@ -85,4 +54,53 @@ else
             }
         </tbody>
     </table>
+}
+
+<div class="modal fade" id="confirmUnlinkModal" tabindex="-1" aria-labelledby="confirmUnlinkModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmUnlinkModalLabel">Confirm Unlink</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to unlink <span id="modalClientName" class="fw-bold"></span> from this contact?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form asp-controller="Contacts" asp-action="Unlink" method="post" class="d-inline">
+                    <input type="hidden" name="contactId" id="unlinkContactId" />
+                    <input type="hidden" name="clientId" id="unlinkClientId" />
+                    <button type="submit" class="btn btn-danger">Unlink</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var confirmUnlinkModal = document.getElementById('confirmUnlinkModal');
+            if (!confirmUnlinkModal) return;
+
+            confirmUnlinkModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                if (!button) return;
+
+                var contactId = button.getAttribute('data-contact-id');
+                var clientId = button.getAttribute('data-client-id');
+                var clientName = button.getAttribute('data-client-name');
+
+                var modalClientName = document.getElementById('modalClientName');
+                var unlinkContactId = document.getElementById('unlinkContactId');
+                var unlinkClientId = document.getElementById('unlinkClientId');
+
+                if (!modalClientName || !unlinkContactId || !unlinkClientId) return;
+                modalClientName.textContent = clientName ?? '';
+                unlinkContactId.value = contactId ?? '';
+                unlinkClientId.value = clientId ?? '';
+            });
+        });
+    </script>
 }

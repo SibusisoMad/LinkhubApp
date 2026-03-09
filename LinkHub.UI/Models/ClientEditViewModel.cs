@@ -8,8 +8,8 @@ namespace LinkHub.UI.Models
         public int Id { get; set; }
         [Required]
         public string? Name { get; set; }
-        public List<LinkedContactInfo> LinkedContacts { get; set; } = new List<LinkedContactInfo>();
-        public List<LinkedContactInfo> AvailableContacts { get; set; } = new List<LinkedContactInfo>();
+        public List<LinkedContactInfo> LinkedContacts { get; set; } = new();
+        public List<LinkedContactInfo> AvailableContacts { get; set; } = new();
     }
 
     public class LinkedContactInfo

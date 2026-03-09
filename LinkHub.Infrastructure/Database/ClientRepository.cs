@@ -26,6 +26,12 @@ namespace LinkHub.Infrastructure.Database
             await _context.SaveChangesAsync();
         }
 
+        public async Task UpdateAsync(Client client)
+        {
+            _context.Clients.Update(client);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<IEnumerable<Client>> GetAllAsync()
         {
             return await _context.Clients.Include(c => c.Contacts).OrderBy(c => c.Name).ToListAsync();

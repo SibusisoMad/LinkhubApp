@@ -6,6 +6,7 @@ namespace LinkHub.Domain.Interfaces
     {
         Task<IEnumerable<string>> GetAllCodesAsync();
         Task AddAsync(Client client);
+        Task UpdateAsync(Client client);
         Task<IEnumerable<Client>> GetAllAsync();
         Task<Client?> GetByIdAsync(int id);
     }

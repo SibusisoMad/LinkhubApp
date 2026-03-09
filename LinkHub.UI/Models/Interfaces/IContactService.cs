@@ -9,7 +9,7 @@ namespace LinkHub.UI.Models.Interfaces
         Task<List<ContactListViewModel>> GetContactsAsync();
         Task UnlinkClientAsync(int contactId, int clientId);
         Task LinkClientAsync(int contactId, int clientId);
-        Task<ContactEditViewModel> GetContactEditViewModelAsync(int id);
+        Task<ContactEditViewModel?> GetContactEditViewModelAsync(int id);
         Task<bool> UpdateContactAsync(ContactUpdateViewModel model);
     }
 }

@@ -45,8 +45,9 @@ namespace LinkHub.Infrastructure.Database
 
         public async Task LinkClientAsync(int contactId, int clientId)
         {
-            if (await _context.ClientContacts.AnyAsync(cc => cc.ClientId == clientId && cc.ContactId == contactId))
-                return;
+            if (await IsLinkedAsync(contactId, clientId))
+                throw new InvalidOperationException("Client is already linked to this Contact.");
+
             var clientContact = new ClientContact
             {
                 ClientId = clientId,
@@ -54,15 +55,23 @@ namespace LinkHub.Infrastructure.Database
                 LinkedAt = DateTime.UtcNow
             };
             await _context.ClientContacts.AddAsync(clientContact);
-            await _context.SaveChangesAsync();
 
-            
+
+
             var contact = await _context.Contacts.FindAsync(contactId);
             if (contact != null)
             {
-                contact.NoOfLinkedClients = await _context.ClientContacts.CountAsync(cc => cc.ContactId == contactId);
-                await _context.SaveChangesAsync();
+                contact.NoOfLinkedClients += 1;
+
             }
+
+            var client = await _context.Clients.FindAsync(clientId);
+            if (client != null)
+            {
+                client.NoOfLinkedContacts += 1;
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         public async Task UnlinkClientAsync(int contactId, int clientId)
@@ -79,7 +88,19 @@ namespace LinkHub.Infrastructure.Database
                     contact.NoOfLinkedClients = await _context.ClientContacts.CountAsync(cc => cc.ContactId == contactId);
                     await _context.SaveChangesAsync();
                 }
+
+                var client = await _context.Clients.FindAsync(clientId);
+                if (client != null)
+                {
+                    client.NoOfLinkedContacts = await _context.ClientContacts.CountAsync(cc => cc.ClientId == clientId);
+                    await _context.SaveChangesAsync();
+                }
             }
+        }
+
+        public async Task<bool> IsLinkedAsync(int contactId, int clientId)
+        {
+            return await _context.ClientContacts.AnyAsync(cc => cc.ClientId == clientId && cc.ContactId == contactId);
         }
     }
 }

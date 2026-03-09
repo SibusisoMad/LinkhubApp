@@ -16,7 +16,18 @@ namespace LinkHub.Domain.Services
             var words = clientName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (words.Length > 1)
             {
-                alpha = string.Concat(words.Where(w => w.Length > 0).Select(w => char.ToUpper(w[0])));
+                alpha = string.Concat(
+                    words
+                        .Select(w => w.FirstOrDefault(char.IsLetter))
+                        .Where(c => c != default)
+                        .Select(char.ToUpperInvariant)
+                );
+
+                if (string.IsNullOrWhiteSpace(alpha))
+                {
+                    alpha = new string(clientName.Trim().ToUpperInvariant().Where(char.IsLetter).ToArray());
+                }
+
                 if (alpha.Length < 3)
                     alpha = alpha.PadRight(3, 'A').Substring(0, 3);
                 else
@@ -24,7 +35,7 @@ namespace LinkHub.Domain.Services
             }
             else
             {
-                alpha = new string(clientName.Trim().ToUpper().Where(char.IsLetter).ToArray());
+                alpha = new string(clientName.Trim().ToUpperInvariant().Where(char.IsLetter).ToArray());
                 if (alpha.Length < 3)
                     alpha = alpha.PadRight(3, 'A').Substring(0, 3);
                 else

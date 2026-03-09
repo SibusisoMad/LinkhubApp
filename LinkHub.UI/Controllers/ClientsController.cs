@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using LinkHub.UI.Models;
 using LinkHub.UI.Models.Interfaces;
 
@@ -35,14 +34,20 @@ namespace LinkHub.UI.Controllers
         public async Task<IActionResult> Create(ClientCreateViewModel model)
         {
             if (!ModelState.IsValid)
-                return View("Edit",model);
+                return View(model);
+
+            if (string.IsNullOrWhiteSpace(model.Name))
+            {
+                ModelState.AddModelError(nameof(model.Name), "Name is required");
+                return View(model);
+            }
 
             var success = await _clientService.CreateClientAsync(model.Name);
             if (success)
             {
                 TempData["SuccessMessage"] = "Client created";
                 TempData["ShowModalAndRedirect"] = true;
-                return RedirectToAction("Create");  
+                return RedirectToAction(nameof(Create));
             }
             else
             {
@@ -56,6 +61,9 @@ namespace LinkHub.UI.Controllers
             var model = await _clientService.GetClientEditViewModelAsync(id);
             if (model == null)
                 return NotFound();
+
+            LoadMessages();
+
             return View(model);
         }
 
@@ -66,7 +74,7 @@ namespace LinkHub.UI.Controllers
                 return View(model);
             await _clientService.UpdateClientAsync(model);
             TempData["SuccessMessage"] = "Client updated.";
-            return RedirectToAction("Edit", new { id = model.Id });
+            return RedirectToAction(nameof(Edit), new { id = model.Id });
         }
 
         [HttpPost]
@@ -81,15 +89,23 @@ namespace LinkHub.UI.Controllers
             {
                 TempData["LinkError"] = ex.Message;
             }
-            return RedirectToAction("Edit", new { id = clientId });
+            return RedirectToAction(nameof(Edit), new { id = clientId });
         }
 
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> UnlinkContact(int clientId, int contactId)
         {
             await _clientService.UnlinkContactAsync(clientId, contactId);
             TempData["UnlinkSuccess"] = "Contact unlinking is successful.";
-            return RedirectToAction("Edit", new { id = clientId });
+            return RedirectToAction(nameof(Edit), new { id = clientId });
+        }
+
+        private void LoadMessages()
+        {
+            ViewBag.SuccessMessage = TempData["SuccessMessage"]?.ToString();
+            ViewBag.LinkSuccess = TempData["LinkSuccess"]?.ToString();
+            ViewBag.UnlinkSuccess = TempData["UnlinkSuccess"]?.ToString();
+            ViewBag.LinkError = TempData["LinkError"]?.ToString();
         }
     }
 }

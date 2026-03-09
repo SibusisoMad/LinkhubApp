@@ -62,7 +62,15 @@ namespace LinkHub.Application.Services
 
         public async Task<Contact> UpdateContactAsync(int id, Contact updatedContact)
         {
+            if (id <= 0)
+                throw new ArgumentException("Contact id is required.", nameof(id));
+
+            if (updatedContact == null)
+                throw new ArgumentNullException(nameof(updatedContact));
+
             var contact = await _contactRepository.GetByIdAsync(id);
+            if (contact == null)
+                throw new KeyNotFoundException("Contact not found.");
 
             contact.Name = updatedContact.Name;
             contact.Surname = updatedContact.Surname;

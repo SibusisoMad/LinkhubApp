@@ -4,7 +4,26 @@
     ViewData["Title"] = "Edit Client";
 }
 
-<h2>Edit Client</h2>
+<h2>Client</h2>
+
+@if ((ViewBag.SuccessMessage as string) == "Client updated.")
+{
+    <div class="modal fade" id="clientUpdatedModal" tabindex="-1" aria-labelledby="clientUpdatedModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-success text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="clientUpdatedModalLabel">Success</h5>
+                </div>
+                <div class="modal-body">
+                    <p>@ViewBag.SuccessMessage</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 <ul class="nav nav-tabs" id="clientTabs" role="tablist">
     <li class="nav-item" role="presentation">
@@ -20,30 +39,23 @@
             <input type="hidden" asp-for="Id" />
             <div class="mb-3">
                 <label asp-for="Name" class="form-label"></label>
-                <input asp-for="Name" class="form-control" readonly />
+                <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
-                    @if (TempData["UnlinkSuccess"] != null)
-                    {
-                        <div class="alert alert-success mt-2" id="unlinkSuccessAlert">
-                            @TempData["UnlinkSuccess"]
-                        </div>
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function () {
-                                var contactsTab = document.getElementById('contacts-tab');
-                                var tab = new bootstrap.Tab(contactsTab);
-                                tab.show();
-                                setTimeout(function () {
-                                    var alert = document.getElementById('unlinkSuccessAlert');
-                                    if (alert) alert.style.display = 'none';
-                                }, 2000);
-                            });
-                        </script>
-                    }
-            
+
+            <button type="submit" class="btn btn-primary">Save</button>
         </form>
     </div>
     <div class="tab-pane fade" id="contacts" role="tabpanel" aria-labelledby="contacts-tab">
+        @if (ViewBag.LinkSuccess != null)
+        {
+            <div class="alert alert-success mt-2" id="linkSuccessAlert">@ViewBag.LinkSuccess</div>
+        }
+        @if (ViewBag.UnlinkSuccess != null)
+        {
+            <div class="alert alert-success mt-2" id="unlinkSuccessAlert">@ViewBag.UnlinkSuccess</div>
+        }
+
         <h4>Linked Contacts</h4>
         @if (Model.LinkedContacts.Any())
         {
@@ -62,37 +74,49 @@
                             <td class="text-start">@contact.FullName</td>
                             <td class="text-start">@contact.Email</td>
                             <td class="text-start">
-                                <a href="/Clients/UnlinkContact?clientId=@Model.Id&contactId=@contact.ContactId" class="text-danger">Unlink</a>
+                                <button type="button"
+                                        class="btn btn-link text-danger p-0"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#confirmUnlinkContactModal"
+                                        data-client-id="@Model.Id"
+                                        data-contact-id="@contact.ContactId"
+                                        data-contact-name="@contact.FullName">
+                                    Unlink
+                                </button>
                             </td>
                         </tr>
                     }
-                        @if (TempData["LinkSuccess"] != null)
-                        {
-                            <div class="alert alert-success mt-2" id="linkSuccessAlert">
-                                @TempData["LinkSuccess"]
-                            </div>
-                            <script>
-                             
-                                document.addEventListener('DOMContentLoaded', function () {
-                                    var contactsTab = document.getElementById('contacts-tab');
-                                    var tab = new bootstrap.Tab(contactsTab);
-                                    tab.show();
-                                    setTimeout(function () {
-                                        var alert = document.getElementById('linkSuccessAlert');
-                                        if (alert) alert.style.display = 'none';
-                                    }, 2000);
-                                });
-                            </script>
-                        }
                 </tbody>
             </table>
+
+            <div class="modal fade" id="confirmUnlinkContactModal" tabindex="-1" aria-labelledby="confirmUnlinkContactModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="confirmUnlinkContactModalLabel">Confirm Unlink</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to unlink <span id="unlinkContactName" class="fw-bold"></span> from this client?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <form asp-action="UnlinkContact" method="post" class="d-inline">
+                                <input type="hidden" name="clientId" id="unlinkClientId" />
+                                <input type="hidden" name="contactId" id="unlinkContactId" />
+                                <button type="submit" class="btn btn-danger">Unlink</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         }
         else
         {
             <div class="alert alert-info mt-2">No contacts found.</div>
         }
         <h4 class="mt-4">Link New Contact</h4>
-        @if (TempData["LinkError"] != null)
+        @if (ViewBag.LinkError != null)
         {
             <div class="modal fade" id="linkErrorModal" tabindex="-1" aria-labelledby="linkErrorModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
@@ -101,18 +125,11 @@
                             <h5 class="modal-title" id="linkErrorModalLabel">Error</h5>
                         </div>
                         <div class="modal-body">
-                            @TempData["LinkError"]
+                            @ViewBag.LinkError
                         </div>
                     </div>
                 </div>
             </div>
-            <script>
-                var linkErrorModal = new bootstrap.Modal(document.getElementById('linkErrorModal'));
-                linkErrorModal.show();
-                setTimeout(function () {
-                    linkErrorModal.hide();
-                }, 1000);
-            </script>
         }
         <form asp-action="LinkContact" method="post" class="d-flex align-items-end">
             <input type="hidden" name="clientId" value="@Model.Id" />
@@ -137,4 +154,65 @@
 </div>
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var contactsTab = document.getElementById('contacts-tab');
+            var shouldActivateContactsTab =
+                document.getElementById('linkSuccessAlert') ||
+                document.getElementById('unlinkSuccessAlert') ||
+                document.getElementById('linkErrorModal');
+
+            if (contactsTab && shouldActivateContactsTab) {
+                var tab = new bootstrap.Tab(contactsTab);
+                tab.show();
+            }
+
+            var linkSuccessAlert = document.getElementById('linkSuccessAlert');
+            if (linkSuccessAlert) {
+                setTimeout(function () { linkSuccessAlert.style.display = 'none'; }, 2000);
+            }
+
+            var unlinkSuccessAlert = document.getElementById('unlinkSuccessAlert');
+            if (unlinkSuccessAlert) {
+                setTimeout(function () { unlinkSuccessAlert.style.display = 'none'; }, 2000);
+            }
+
+            var linkErrorModalEl = document.getElementById('linkErrorModal');
+            if (linkErrorModalEl) {
+                var linkErrorModal = new bootstrap.Modal(linkErrorModalEl);
+                linkErrorModal.show();
+                setTimeout(function () {
+                    linkErrorModal.hide();
+                }, 1000);
+            }
+
+            var clientUpdatedModalEl = document.getElementById('clientUpdatedModal');
+            if (clientUpdatedModalEl) {
+                var clientUpdatedModal = new bootstrap.Modal(clientUpdatedModalEl);
+                clientUpdatedModal.show();
+            }
+
+            var confirmUnlinkContactModalEl = document.getElementById('confirmUnlinkContactModal');
+            if (confirmUnlinkContactModalEl) {
+                confirmUnlinkContactModalEl.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget;
+                    if (!button) return;
+
+                    var clientId = button.getAttribute('data-client-id');
+                    var contactId = button.getAttribute('data-contact-id');
+                    var contactName = button.getAttribute('data-contact-name');
+
+                    var unlinkContactName = document.getElementById('unlinkContactName');
+                    var unlinkClientId = document.getElementById('unlinkClientId');
+                    var unlinkContactId = document.getElementById('unlinkContactId');
+
+                    if (!unlinkContactName || !unlinkClientId || !unlinkContactId) return;
+                    unlinkContactName.textContent = contactName ?? '';
+                    unlinkClientId.value = clientId ?? '';
+                    unlinkContactId.value = contactId ?? '';
+                });
+            }
+        });
+    </script>
 }

@@ -10,6 +10,10 @@ namespace LinkHub.UI.Models
         public string? Name { get; set; }
         public string? Surname { get; set; }
         public string? Email { get; set; }
+
+        public string? ClientsSuccessMessage { get; set; }
+        public string? ContactUpdatedMessage { get; set; }
+
         public List<LinkedClientInfo> LinkedClients { get; set; } = new List<LinkedClientInfo>();
         public List<LinkedClientInfo> AvailableClients { get; set; } = new List<LinkedClientInfo>();
     }
@@ -17,7 +21,7 @@ namespace LinkHub.UI.Models
     public class LinkedClientInfo
     {
         public int ClientId { get; set; }
-        public string ClientName { get; set; }
-        public string ClientCode { get; set; }
+        public string? ClientName { get; set; }
+        public string? ClientCode { get; set; }
     }
 }
