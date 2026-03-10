@@ -77,6 +77,11 @@ namespace LinkHub.Application.Services
             if (contact == null)
                 throw new KeyNotFoundException("Contact not found.");
 
+            var contacts = await _contactRepository.GetAllAsync();
+            if (contacts.Any(c => c.Id != id && c.Email.Equals(updatedContact.Email, StringComparison.OrdinalIgnoreCase)))
+                throw new InvalidOperationException("A contact with this email already exists.");
+
+
             contact.Name = updatedContact.Name;
             contact.Surname = updatedContact.Surname;
             contact.Email = updatedContact.Email;

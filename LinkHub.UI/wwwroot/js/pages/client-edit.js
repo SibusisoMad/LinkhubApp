@@ -215,7 +215,7 @@
 
             if (query.length < 3) {
                 hideResults();
-                showStatus(query.length === 0 ? '' : 'Type 3+ characters to search.');
+                showStatus(query.length === 0 ? '' : 'searching......');
                 return;
             }
 

@@ -62,6 +62,18 @@
                     return;
                 }
 
+                if (response.validation) {
+
+                    applyFieldErrors($form, response.validation);
+                    return;
+                }
+
+                if (response.error) {
+
+                    showError($form, response.error);
+                    return;
+                }
+
                 if (response && response.success) {
                     return;
                 }

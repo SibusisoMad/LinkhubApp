@@ -41,10 +41,7 @@ namespace LinkHub.UI.Controllers
             if (!ModelState.IsValid)
                 return AjaxValidationError(ModelState);
 
-            var success = await _service.CreateContactAsync(model);
-
-            if (!success)
-                return AjaxError("Failed to create contact.");
+             await _service.CreateContactAsync(model);
 
             TempData["Success"] = "Contact created.";
 

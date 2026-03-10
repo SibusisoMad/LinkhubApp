@@ -1,12 +1,15 @@
 
+using LinkHub.UI.Filters;
 using LinkHub.UI.Models.Interfaces;
 using LinkHub.UI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
-
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<AjaxExceptionFilter>();
+});
 // Register HttpClient for API integration
 builder.Services.AddHttpClient("ApiClient", (sp, client) =>
 {

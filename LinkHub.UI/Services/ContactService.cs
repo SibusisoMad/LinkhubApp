@@ -1,5 +1,6 @@
 using LinkHub.UI.Models;
 using LinkHub.UI.Models.Interfaces;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 
@@ -21,7 +22,9 @@ namespace LinkHub.UI.Services
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<bool> CreateContactAsync(ContactCreateViewModel model)
+       
+
+        public async Task CreateContactAsync(ContactCreateViewModel model)
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
             var content = new StringContent(
@@ -30,6 +33,50 @@ namespace LinkHub.UI.Services
                 "application/json"
             );
             var response = await client.PostAsync("/api/contacts", content);
+
+            if (response.IsSuccessStatusCode)
+                return;
+
+            var raw = await response.Content.ReadAsStringAsync();
+            var message = CleanApiMessage(raw);
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+               
+                throw new ApiFieldValidationException(
+                    nameof(ContactCreateViewModel.Email),
+                    string.IsNullOrWhiteSpace(message)
+                        ? "A contact with this email already exists."
+                        : message);
+            }
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                
+                var fieldName = TryInferFieldNameFromMessage(message);
+                if (!string.IsNullOrWhiteSpace(fieldName) && !string.IsNullOrWhiteSpace(message))
+                    throw new ApiFieldValidationException(fieldName, message);
+
+                throw new InvalidOperationException(string.IsNullOrWhiteSpace(message)
+                    ? "Failed to create contact."
+                    : message);
+            }
+
+            throw new InvalidOperationException(string.IsNullOrWhiteSpace(message)
+                ? "Failed to create contact."
+                : message);
+        }
+
+
+        public async Task<bool> UpdateContactAsync(ContactUpdateViewModel model)
+        {
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var content = new StringContent(
+                JsonSerializer.Serialize(model),
+                Encoding.UTF8,
+                "application/json"
+            );
+            var response = await client.PutAsync($"/api/contacts/{model.Id}", content);
             return response.IsSuccessStatusCode;
         }
 
@@ -156,16 +203,25 @@ namespace LinkHub.UI.Services
                 })
                 .ToList();
         }
-        public async Task<bool> UpdateContactAsync(ContactUpdateViewModel model)
+
+        private static string CleanApiMessage(string? raw)
         {
-            var client = _httpClientFactory.CreateClient("ApiClient");
-            var content = new StringContent(
-                JsonSerializer.Serialize(model),
-                Encoding.UTF8,
-                "application/json"
-            );
-            var response = await client.PutAsync($"/api/contacts/{model.Id}", content);
-            return response.IsSuccessStatusCode;
+            if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
+            var trimmed = raw.Trim();
+            if (trimmed.Length >= 2 && trimmed[0] == '"' && trimmed[^1] == '"')
+                trimmed = trimmed.Substring(1, trimmed.Length - 2);
+            return trimmed.Trim();
         }
+
+        private static string? TryInferFieldNameFromMessage(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message)) return null;
+
+            if (message.StartsWith("Email", StringComparison.OrdinalIgnoreCase)) return nameof(ContactCreateViewModel.Email);
+            if (message.StartsWith("Name", StringComparison.OrdinalIgnoreCase)) return nameof(ContactCreateViewModel.Name);
+            if (message.StartsWith("Surname", StringComparison.OrdinalIgnoreCase)) return nameof(ContactCreateViewModel.Surname);
+            return null;
+        }
+
     }
 }

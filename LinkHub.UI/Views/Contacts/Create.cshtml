@@ -64,6 +64,29 @@
                 window.setTimeout(function () {
                     $(location).attr('href', redirectUrl);
                 }, 1200);
+
+                if (response.validation) {
+
+            $('.text-danger').text('');
+
+            for (var field in response.validation) {
+
+                var messages = response.validation[field];
+
+                var span = $('[data-valmsg-for="' + field + '"]');
+
+                if (span.length) {
+                    span.text(messages[0]);
+                }
+            }
+        }
+
+            if (response.error) {
+
+            $('[data-ajax-error]')
+                .removeClass('d-none')
+                .text(response.error);
+        }
             });
         });
     </script>

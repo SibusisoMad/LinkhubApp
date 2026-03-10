@@ -5,7 +5,7 @@ namespace LinkHub.UI.Models.Interfaces
 {
     public interface IContactService
     {
-        Task<bool> CreateContactAsync(ContactCreateViewModel model);
+        Task CreateContactAsync(ContactCreateViewModel model);
         Task<List<ContactListViewModel>> GetContactsAsync();
         Task UnlinkClientAsync(int contactId, int clientId);
         Task LinkClientAsync(int contactId, int clientId);
