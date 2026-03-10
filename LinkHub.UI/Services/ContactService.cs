@@ -37,9 +37,14 @@ namespace LinkHub.UI.Services
         public async Task LinkClientAsync(int contactId, int clientId)
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
-            var content = new StringContent("", Encoding.UTF8, "application/json");
-            var response = await client.PostAsync($"/api/contacts/{contactId}/link-client/{clientId}", content);
-            response.EnsureSuccessStatusCode();
+            var response = await client.PostAsync($"/api/contacts/{contactId}/link-client/{clientId}", null);
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await response.Content.ReadAsStringAsync();
+                throw new InvalidOperationException(string.IsNullOrWhiteSpace(message)
+                    ? "Failed to link client."
+                    : message);
+            }
         }
 
         public async Task<List<ContactListViewModel>> GetContactsAsync()
@@ -73,7 +78,13 @@ namespace LinkHub.UI.Services
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
             var response = await client.DeleteAsync($"/api/contacts/{contactId}/unlink-client/{clientId}");
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await response.Content.ReadAsStringAsync();
+                throw new InvalidOperationException(string.IsNullOrWhiteSpace(message)
+                    ? "Failed to unlink client."
+                    : message);
+            }
         }
         public async Task<ContactEditViewModel?> GetContactEditViewModelAsync(int id)
         {
@@ -101,18 +112,19 @@ namespace LinkHub.UI.Services
                     .ToList();
             }
 
+            if (linkedClients.Count == 0 && apiContact.Clients?.Count > 0)
+            {
+                linkedClients = apiContact.Clients
+                    .Select(c => new LinkedClientInfo
+                    {
+                        ClientId = c.Id,
+                        ClientName = c.Name,
+                        ClientCode = c.ClientCode
+                    })
+                    .ToList();
+            }
+
             
-            var clientsResponse = await client.GetAsync("/api/clients");
-            var clientsJson = await clientsResponse.Content.ReadAsStringAsync();
-            var allClients = JsonSerializer.Deserialize<List<Client>>(clientsJson, JsonOptions) ?? new List<Client>();
-
-            var linkedClientIds = linkedClients.Select(lc => lc.ClientId).ToHashSet();
-
-            var availableClients = allClients
-                .Where(c => !linkedClientIds.Contains(c.Id))
-                .Select(c => new LinkedClientInfo { ClientId = c.Id, ClientName = c.Name ?? string.Empty, ClientCode = c.ClientCode ?? string.Empty })
-                .ToList();
-
             return new ContactEditViewModel
             {
                 Id = apiContact.Id,
@@ -120,8 +132,29 @@ namespace LinkHub.UI.Services
                 Surname = apiContact.Surname,
                 Email = apiContact.Email,
                 LinkedClients = linkedClients,
-                AvailableClients = availableClients
+                AvailableClients = new()
             };
+        }
+
+        public async Task<List<LinkedClientInfo>> SearchAvailableClientsAsync(int contactId, string query, int skip, int take)
+        {
+            query = query ?? string.Empty;
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var url = $"/api/contacts/{contactId}/available-clients?query={Uri.EscapeDataString(query)}&skip={skip}&take={take}";
+            var response = await client.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+                return new();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var matches = JsonSerializer.Deserialize<List<Client>>(json, JsonOptions) ?? new();
+            return matches
+                .Select(c => new LinkedClientInfo
+                {
+                    ClientId = c.Id,
+                    ClientName = c.Name ?? string.Empty,
+                    ClientCode = c.ClientCode ?? string.Empty
+                })
+                .ToList();
         }
         public async Task<bool> UpdateContactAsync(ContactUpdateViewModel model)
         {

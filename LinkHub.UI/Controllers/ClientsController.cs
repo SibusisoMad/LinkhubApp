@@ -1,111 +1,159 @@
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using LinkHub.UI.Models;
 using LinkHub.UI.Models.Interfaces;
+using LinkHub.UI.Filters;
+using Microsoft.AspNetCore.Mvc;
 
 namespace LinkHub.UI.Controllers
 {
-    public class ClientsController : Controller
+    [Route("clients")]
+    public class ClientsController : BaseController
     {
-        private readonly IClientService _clientService;
+        private readonly IClientService _service;
         private readonly ILogger<ClientsController> _logger;
 
-        public ClientsController(IClientService clientService, ILogger<ClientsController> logger)
+        public ClientsController(
+            IClientService service,
+            ILogger<ClientsController> logger)
         {
-            _clientService = clientService;
+            _service = service;
             _logger = logger;
         }
 
-        [HttpGet]
+        [HttpGet("list")]
         public async Task<IActionResult> List()
         {
-            var model = await _clientService.GetClientsAsync();
-            return View(model);
+            var clients = await _service.GetClientsAsync();
+            return View(clients);
         }
 
-
-        [HttpGet]
+        [HttpGet("create")]
         public IActionResult Create()
         {
             return View();
         }
 
-        [HttpPost]
+        [HttpPost("create")]
+        [ValidateAntiForgeryToken]
+        [AjaxOnly]
         public async Task<IActionResult> Create(ClientCreateViewModel model)
         {
             if (!ModelState.IsValid)
-                return View(model);
+                return AjaxValidationError(ModelState);
 
             if (string.IsNullOrWhiteSpace(model.Name))
             {
-                ModelState.AddModelError(nameof(model.Name), "Name is required");
-                return View(model);
+                ModelState.AddModelError(nameof(model.Name), "Name is required.");
+                return AjaxValidationError(ModelState);
             }
 
-            var success = await _clientService.CreateClientAsync(model.Name);
-            if (success)
-            {
-                TempData["SuccessMessage"] = "Client created";
-                TempData["ShowModalAndRedirect"] = true;
-                return RedirectToAction(nameof(Create));
-            }
-            else
-            {
-                ModelState.AddModelError(string.Empty, "Failed to create client.");
-                return View(model);
-            }
+            var success = await _service.CreateClientAsync(model.Name.Trim());
+
+            if (!success)
+                return AjaxError("Failed to create client.");
+
+            TempData["Success"] = "Client created.";
+
+            return Json(new { success = true, redirectUrl = Url.Action("List") });
         }
-        [HttpGet]
+
+        [HttpGet("edit/{id:int?}")]
         public async Task<IActionResult> Edit(int id)
         {
-            var model = await _clientService.GetClientEditViewModelAsync(id);
-            if (model == null)
+            if (id <= 0)
                 return NotFound();
 
-            LoadMessages();
+            var model = await _service.GetClientEditViewModelAsync(id);
 
-            return View(model);
+            return model == null ? NotFound() : View(model);
         }
 
-        [HttpPost]
+        [HttpPost("edit")]
+        [ValidateAntiForgeryToken]
+        [AjaxOnly]
         public async Task<IActionResult> Edit(ClientEditViewModel model)
         {
             if (!ModelState.IsValid)
-                return View(model);
-            await _clientService.UpdateClientAsync(model);
-            TempData["SuccessMessage"] = "Client updated.";
-            return RedirectToAction(nameof(Edit), new { id = model.Id });
-        }
+                return AjaxValidationError(ModelState);
 
-        [HttpPost]
-        public async Task<IActionResult> LinkContact(int clientId, int contactId)
-        {
             try
             {
-                await _clientService.LinkContactAsync(clientId, contactId);
-                TempData["LinkSuccess"] = "Contact linked successfully.";
+                await _service.UpdateClientAsync(model);
+
+                return AjaxSuccess();
             }
-            catch (InvalidOperationException ex)
+            catch (Exception ex)
             {
-                TempData["LinkError"] = ex.Message;
+                _logger.LogError(ex, "Failed to update client {ClientId}", model.Id);
+                return AjaxServerError("Update failed.");
             }
-            return RedirectToAction(nameof(Edit), new { id = clientId });
         }
 
-        [HttpPost]
+        [HttpPost("link-contact")]
+        [ValidateAntiForgeryToken]
+        [AjaxOnly]
+        public async Task<IActionResult> LinkContact(int clientId, int contactId)
+        {
+            if (clientId <= 0 || contactId <= 0)
+                return AjaxError("Invalid client or contact id.");
+
+            try
+            {
+                await _service.LinkContactAsync(clientId, contactId);
+                return AjaxSuccess();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Link contact failed {ClientId} {ContactId}", clientId, contactId);
+                return AjaxServerError("Failed to link contact.");
+            }
+        }
+
+        [HttpPost("unlink-contact")]
+        [ValidateAntiForgeryToken]
+        [AjaxOnly]
         public async Task<IActionResult> UnlinkContact(int clientId, int contactId)
         {
-            await _clientService.UnlinkContactAsync(clientId, contactId);
-            TempData["UnlinkSuccess"] = "Contact unlinking is successful.";
-            return RedirectToAction(nameof(Edit), new { id = clientId });
+            if (clientId <= 0 || contactId <= 0)
+                return AjaxError("Invalid client or contact id.");
+
+            try
+            {
+                await _service.UnlinkContactAsync(clientId, contactId);
+                return AjaxSuccess();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unlink contact failed {ClientId} {ContactId}", clientId, contactId);
+                return AjaxServerError("Failed to unlink contact.");
+            }
         }
 
-        private void LoadMessages()
+        [HttpGet("search-available-contacts")]
+        [AjaxOnly]
+        public async Task<IActionResult> SearchAvailableContacts(
+            int clientId,
+            string query,
+            int skip = 0,
+            int take = 5)
         {
-            ViewBag.SuccessMessage = TempData["SuccessMessage"]?.ToString();
-            ViewBag.LinkSuccess = TempData["LinkSuccess"]?.ToString();
-            ViewBag.UnlinkSuccess = TempData["UnlinkSuccess"]?.ToString();
-            ViewBag.LinkError = TempData["LinkError"]?.ToString();
+            if (clientId <= 0)
+                return AjaxError("Invalid client id.");
+
+            query = (query ?? string.Empty).Trim();
+            if (query.Length < 3)
+                return Json(new { items = Array.Empty<object>(), hasMore = false });
+
+            var effectiveTake = take <= 0 ? 5 : take;
+            var matches = await _service.SearchAvailableContactsAsync(
+                clientId,
+                query,
+                skip < 0 ? 0 : skip,
+                effectiveTake + 1);
+
+            var hasMore = matches.Count > effectiveTake;
+            var items = matches.Take(effectiveTake);
+
+            return Json(new { items, hasMore });
         }
     }
 }

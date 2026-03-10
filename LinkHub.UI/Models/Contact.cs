@@ -11,7 +11,8 @@ namespace LinkHub.UI.Models
         public int NoOfLinkedClients { get; set; }
         public List<LinkedClientInfo> LinkedClients { get; set; } = new List<LinkedClientInfo>();
 
-        // The API returns linked client info via the join entity (clientContacts).
+        public List<Client>? Clients { get; set; }
+
         public List<ContactClientContact>? ClientContacts { get; set; }
     }
 

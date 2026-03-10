@@ -3,16 +3,21 @@ using System.Threading.Tasks;
 using LinkHub.Application.Interfaces;
 using LinkHub.Domain.Models;
 using LinkHub.Domain.Interfaces;
+using LinkHub.Application.Dtos;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LinkHub.Application.Services
 {
     public class ContactService : IContactService
     {
         private readonly IContactRepository _contactRepository;
+        private readonly IClientRepository _clientRepository;
 
-        public ContactService(IContactRepository contactRepository)
+        public ContactService(IContactRepository contactRepository, IClientRepository clientRepository)
         {
             _contactRepository = contactRepository;
+            _clientRepository = clientRepository;
         }
 
 
@@ -86,6 +91,35 @@ namespace LinkHub.Application.Services
         public async Task UnlinkClientAsync(int contactId, int clientId)
         {
             await _contactRepository.UnlinkClientAsync(contactId, clientId);
+        }
+
+        public async Task<IEnumerable<ClientDto>> SearchAvailableClientsAsync(int contactId, string query, int skip, int take)
+        {
+            if (contactId <= 0)
+                throw new ArgumentException("Contact id is required.", nameof(contactId));
+
+            query = (query ?? string.Empty).Trim();
+            if (query.Length < 3)
+                return Enumerable.Empty<ClientDto>();
+
+            if (skip < 0)
+                skip = 0;
+
+            if (take <= 0)
+                take = 5;
+
+            if (take > 50)
+                take = 50;
+
+            var matches = await _clientRepository.SearchAvailableForContactAsync(contactId, query, skip, take);
+            return matches.Select(c => new ClientDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                ClientCode = c.ClientCode,
+                NoOfLinkedContacts = c.NoOfLinkedContacts,
+                Contacts = new List<ContactDto>()
+            });
         }
     }
 }

@@ -7,35 +7,23 @@
 
 <h2>Create Client</h2>
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div id="successModal" class="modal" tabindex="-1" style="display:block; background:rgba(0,0,0,0.3);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-success text-white">
-                <div class="modal-header">
-                    <h5 class="modal-title">Success</h5>
-                </div>
-                <div class="modal-body">
-                    <p>@TempData["SuccessMessage"]</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" onclick="closeModalAndRedirect()">Close</button>
-                </div>
+<div class="modal fade" id="clientCreateSuccessModal" tabindex="-1" aria-labelledby="clientCreateSuccessModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-success text-white">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clientCreateSuccessModalLabel">Success</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="clientCreateSuccessModalBody">Client created.</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
-    <script>
-        function closeModalAndRedirect() {
-            document.getElementById('successModal').style.display = 'none';
-            window.location.href = '/Clients/List';
-        }
-        if (@(TempData["ShowModalAndRedirect"] != null ? "true" : "false")) {
-            setTimeout(closeModalAndRedirect, 2000);
-        }
-    </script>
-}
+</div>
 
-<form asp-action="Create" method="post">
+<form asp-action="Create" method="post" data-ajax="true" data-ajax-redirect="false" id="clientCreateForm">
+    <div class="alert alert-danger d-none" data-ajax-error role="alert"></div>
     <div class="mb-3">
         <div class="form-group">
             <label asp-for="Name" class="control-label"></label>
@@ -48,4 +36,27 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        $(function () {
+            $('#clientCreateForm').on('ajax:success', function (e, response) {
+                if (!response || response.success !== true) return;
+
+                var redirectUrl = response.redirectUrl || '/clients/list';
+
+                var modalEl = $('#clientCreateSuccessModal').get(0);
+                if (!modalEl) {
+                    $(location).attr('href', redirectUrl);
+                    return;
+                }
+
+                var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.show();
+
+                window.setTimeout(function () {
+                    $(location).attr('href', redirectUrl);
+                }, 1200);
+            });
+        });
+    </script>
 }

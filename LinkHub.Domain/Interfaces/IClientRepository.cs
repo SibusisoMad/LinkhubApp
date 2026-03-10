@@ -9,6 +9,8 @@ namespace LinkHub.Domain.Interfaces
         Task UpdateAsync(Client client);
         Task<IEnumerable<Client>> GetAllAsync();
         Task<Client?> GetByIdAsync(int id);
+
+        Task<List<Client>> SearchAvailableForContactAsync(int contactId, string query, int skip, int take);
     }
 
 }

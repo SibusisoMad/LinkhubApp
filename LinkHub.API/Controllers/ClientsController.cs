@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using LinkHub.Application.Dtos;
 using LinkHub.API.Dtos;
+using System;
+using System.Collections.Generic;
 
 namespace LinkHub.API.Controllers
 {
@@ -126,6 +128,29 @@ namespace LinkHub.API.Controllers
             {
                 return Conflict(ex.Message);
             }
+        }
+
+        [HttpGet("{clientId}/available-contacts")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<IEnumerable<ContactDto>>> SearchAvailableContacts(
+            int clientId,
+            [FromQuery] string query,
+            [FromQuery] int skip = 0,
+            [FromQuery] int take = 5)
+        {
+            if (clientId <= 0)
+                return BadRequest("Client id is required.");
+
+            if (take <= 0 || take > 50)
+                return BadRequest("Take must be between 1 and 50.");
+
+            if (skip < 0)
+                return BadRequest("Skip must be 0 or greater.");
+
+            query = query ?? string.Empty;
+            var results = await _clientService.SearchAvailableContactsAsync(clientId, query, skip, take);
+            return Ok(results);
         }
     }
 }

@@ -68,9 +68,11 @@ else
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form asp-controller="Contacts" asp-action="Unlink" method="post" class="d-inline">
+                <form asp-controller="Contacts" asp-action="Unlink" method="post" class="d-inline" data-ajax="true">
+                    <div class="alert alert-danger d-none" data-ajax-error role="alert"></div>
                     <input type="hidden" name="contactId" id="unlinkContactId" />
                     <input type="hidden" name="clientId" id="unlinkClientId" />
+                    <input type="hidden" name="returnUrl" value="@Url.Action("List", "Contacts")" />
                     <button type="submit" class="btn btn-danger">Unlink</button>
                 </form>
             </div>
@@ -80,26 +82,17 @@ else
 
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var confirmUnlinkModal = document.getElementById('confirmUnlinkModal');
-            if (!confirmUnlinkModal) return;
+        $(function () {
+            var $confirmUnlinkModal = $('#confirmUnlinkModal');
+            if ($confirmUnlinkModal.length === 0) return;
 
-            confirmUnlinkModal.addEventListener('show.bs.modal', function (event) {
-                var button = event.relatedTarget;
-                if (!button) return;
+            $confirmUnlinkModal.on('show.bs.modal', function (event) {
+                var $button = $(event.relatedTarget);
+                if ($button.length === 0) return;
 
-                var contactId = button.getAttribute('data-contact-id');
-                var clientId = button.getAttribute('data-client-id');
-                var clientName = button.getAttribute('data-client-name');
-
-                var modalClientName = document.getElementById('modalClientName');
-                var unlinkContactId = document.getElementById('unlinkContactId');
-                var unlinkClientId = document.getElementById('unlinkClientId');
-
-                if (!modalClientName || !unlinkContactId || !unlinkClientId) return;
-                modalClientName.textContent = clientName ?? '';
-                unlinkContactId.value = contactId ?? '';
-                unlinkClientId.value = clientId ?? '';
+                $('#modalClientName').text($button.data('client-name') || '');
+                $('#unlinkContactId').val($button.data('contact-id') || '');
+                $('#unlinkClientId').val($button.data('client-id') || '');
             });
         });
     </script>

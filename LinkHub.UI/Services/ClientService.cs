@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
@@ -73,32 +74,32 @@ namespace LinkHub.UI.Services
                 })
                 .ToList() ?? new();
 
-     
-            var allContactsResponse = await _client.GetAsync("/api/contacts");
-            if (!allContactsResponse.IsSuccessStatusCode)
-                return new ClientEditViewModel { Id = clientId, Name = apiClient.Name, LinkedContacts = linkedContacts, AvailableContacts = new() };
-
-            var allContacts = await DeserializeAsync<List<Contact>>(allContactsResponse) ?? new();
-
-            var linkedContactIds = linkedContacts.Select(lc => lc.ContactId).ToHashSet();
-
-            var availableContacts = allContacts
-                .Where(c => !linkedContactIds.Contains(c.Id))
-                .Select(c => new LinkedContactInfo
-                {
-                    ContactId = c.Id,
-                    FullName = $"{c.Surname} {c.Name}",
-                    Email = c.Email ?? string.Empty,
-                })
-                .ToList();
-
             return new ClientEditViewModel
             {
                 Id = clientId,
                 Name = apiClient.Name,
                 LinkedContacts = linkedContacts,
-                AvailableContacts = availableContacts,
+                AvailableContacts = new(),
             };
+        }
+
+        public async Task<List<LinkedContactInfo>> SearchAvailableContactsAsync(int clientId, string query, int skip, int take)
+        {
+            query = query ?? string.Empty;
+            var url = $"/api/clients/{clientId}/available-contacts?query={Uri.EscapeDataString(query)}&skip={skip}&take={take}";
+            var response = await _client.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+                return new();
+
+            var matches = await DeserializeAsync<List<Contact>>(response) ?? new();
+            return matches
+                .Select(c => new LinkedContactInfo
+                {
+                    ContactId = c.Id,
+                    FullName = $"{c.Surname} {c.Name}",
+                    Email = c.Email ?? string.Empty
+                })
+                .ToList();
         }
 
         public async Task UpdateClientAsync(ClientEditViewModel model)

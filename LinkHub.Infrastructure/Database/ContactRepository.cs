@@ -31,6 +31,33 @@ namespace LinkHub.Infrastructure.Database
                 .ToListAsync();
         }
 
+        public async Task<List<Contact>> SearchAvailableForClientAsync(int clientId, string query, int skip, int take)
+        {
+            query = query?.Trim() ?? string.Empty;
+
+            var contactsQuery = _context.Contacts
+                .AsNoTracking()
+                .Where(c => !c.ClientContacts.Any(cc => cc.ClientId == clientId));
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                contactsQuery = contactsQuery.Where(c =>
+                    EF.Functions.Like(c.Surname, like) ||
+                    EF.Functions.Like(c.Name, like) ||
+                    EF.Functions.Like(c.Email, like)
+                );
+            }
+
+            return await contactsQuery
+                .OrderBy(c => c.Surname)
+                .ThenBy(c => c.Name)
+                .ThenBy(c => c.Email)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync();
+        }
+
         public async Task AddAsync(Contact contact)
         {
             await _context.Contacts.AddAsync(contact);

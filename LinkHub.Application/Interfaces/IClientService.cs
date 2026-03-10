@@ -13,5 +13,6 @@ namespace LinkHub.Application.Interfaces
         Task UpdateClientNameAsync(int id, string name);
         Task LinkContactAsync(int clientId, int contactId);
         Task UnlinkContactAsync(int clientId, int contactId);
+        Task<IEnumerable<ContactDto>> SearchAvailableContactsAsync(int clientId, string query, int skip, int take);
     }
 }

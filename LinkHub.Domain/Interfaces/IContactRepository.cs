@@ -8,6 +8,7 @@ namespace LinkHub.Domain.Interfaces
     {
         Task<Contact?> GetByIdAsync(int id);
         Task<IEnumerable<Contact>> GetAllAsync();
+        Task<List<Contact>> SearchAvailableForClientAsync(int clientId, string query, int skip, int take);
         Task AddAsync(Contact contact);
         Task LinkClientAsync(int contactId, int clientId);
         Task UnlinkClientAsync(int contactId, int clientId);

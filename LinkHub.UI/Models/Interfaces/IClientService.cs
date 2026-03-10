@@ -11,5 +11,7 @@ namespace LinkHub.UI.Models.Interfaces
         Task UpdateClientAsync(ClientEditViewModel model);
         Task LinkContactAsync(int clientId, int contactId);
         Task UnlinkContactAsync(int clientId, int contactId);
+
+        Task<List<LinkedContactInfo>> SearchAvailableContactsAsync(int clientId, string query, int skip, int take);
     }
 }

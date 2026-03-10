@@ -1,116 +1,169 @@
 using LinkHub.UI.Models;
 using LinkHub.UI.Models.Interfaces;
+using LinkHub.UI.Filters;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace LinkHub.UI.Controllers
 {
-    public class ContactsController : Controller
+    [Route("contacts")]
+    public class ContactsController : BaseController
     {
-        private readonly IContactService _contactService;
+        private readonly IContactService _service;
+        private readonly ILogger<ContactsController> _logger;
 
-        public ContactsController(IContactService contactService)
+        public ContactsController(
+            IContactService service,
+            ILogger<ContactsController> logger)
         {
-            _contactService = contactService;
+            _service = service;
+            _logger = logger;
         }
-            
 
-
-        [HttpGet]
+        [HttpGet("create")]
         public IActionResult Create()
         {
             return View();
         }
 
-        [HttpGet]
+        [HttpGet("list")]
         public async Task<IActionResult> List()
         {
-            var model = await _contactService.GetContactsAsync();
-            return View(model);
+            var contacts = await _service.GetContactsAsync();
+
+            return View(contacts);
         }
 
-        [HttpPost]
+        [HttpPost("create")]
+        [ValidateAntiForgeryToken]
+        [AjaxOnly]
         public async Task<IActionResult> Create(ContactCreateViewModel model)
         {
             if (!ModelState.IsValid)
-                return View(model);
+                return AjaxValidationError(ModelState);
 
-            var success = await _contactService.CreateContactAsync(model);
-            if (success)
-            {
-                TempData["SuccessMessage"] = "Contact created successfully.";
-                return RedirectToAction(nameof(Create));
-            }
-            else
-            {
-                ModelState.AddModelError(string.Empty, "Failed to create contact. Email may already exist or be invalid.");
-                return View(model);
-            }
+            var success = await _service.CreateContactAsync(model);
+
+            if (!success)
+                return AjaxError("Failed to create contact.");
+
+            TempData["Success"] = "Contact created.";
+
+            return Json(new { success = true, redirectUrl = Url.Action("List") });
         }
 
-        [HttpGet]
+        [HttpGet("edit/{id:int?}")]
         public async Task<IActionResult> Edit(int id)
         {
-            var model = await LoadEditModel(id);
+            if (id <= 0)
+                return NotFound();
+
+            var model = await _service.GetContactEditViewModelAsync(id);
+
             return model == null ? NotFound() : View(model);
         }
 
-        [HttpPost]
+        [HttpPost("update")]
+        [ValidateAntiForgeryToken]
+        [AjaxOnly]
         public async Task<IActionResult> Update(ContactUpdateViewModel model)
         {
             if (!ModelState.IsValid)
-                return await ReloadEditView(model);
+                return AjaxValidationError(ModelState);
 
-            var success = await _contactService.UpdateContactAsync(model);
+            var success = await _service.UpdateContactAsync(model);
+
             if (!success)
-            {
-                ModelState.AddModelError(string.Empty, "Failed to update contact. Email may already exist or be invalid.");
-                return await ReloadEditView(model);
-            }
+                return AjaxError("Failed to update contact.");
 
-            TempData["ContactUpdatedMessage"] = "Contact updated successfully.";
-            return RedirectToAction(nameof(Edit), new { id = model.Id });
+            return AjaxSuccess();
         }
 
-        [HttpPost]
+        [HttpPost("link-client")]
+        [ValidateAntiForgeryToken]
+        [AjaxOnly]
         public async Task<IActionResult> LinkClient(int contactId, int clientId)
         {
-            await _contactService.LinkClientAsync(contactId, clientId);
-            TempData["SuccessMessage"] = "Client linked successfully.";
-            return RedirectToAction(nameof(Edit), new { id = contactId });
+            if (contactId <= 0 || clientId <= 0)
+                return AjaxError("Invalid contact or client id.");
+
+            try
+            {
+                await _service.LinkClientAsync(contactId, clientId);
+
+                return AjaxSuccess();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return AjaxError(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to link client {ClientId} to contact {ContactId}",
+                    clientId,
+                    contactId);
+
+                return AjaxServerError("Failed to link client.");
+            }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Unlink(int contactId, int clientId)
+        [HttpPost("unlink-client")]
+        [ValidateAntiForgeryToken]
+        [AjaxOnly]
+        public async Task<IActionResult> UnlinkClient(int contactId, int clientId)
         {
-            await _contactService.UnlinkClientAsync(contactId, clientId);
-            TempData["SuccessMessage"] = "Client unlinked successfully.";
-            return RedirectToAction(nameof(Edit), new { id = contactId });
+            if (contactId <= 0 || clientId <= 0)
+                return AjaxError("Invalid contact or client id.");
+
+            try
+            {
+                await _service.UnlinkClientAsync(contactId, clientId);
+
+                return AjaxSuccess();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return AjaxError(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to unlink client {ClientId} from contact {ContactId}",
+                    clientId,
+                    contactId);
+
+                return AjaxServerError("Failed to unlink client.");
+            }
         }
 
-        private async Task<ContactEditViewModel?> LoadEditModel(int id)
+        [HttpGet("search-available-clients")]
+        [AjaxOnly]
+        public async Task<IActionResult> SearchAvailableClients(
+            int contactId,
+            string query,
+            int skip = 0,
+            int take = 5)
         {
-            var model = await _contactService.GetContactEditViewModelAsync(id);
-            if (model == null)
-                return null;
+            if (contactId <= 0)
+                return AjaxError("Invalid contact id.");
 
-            model.ClientsSuccessMessage = TempData["SuccessMessage"]?.ToString();
-            model.ContactUpdatedMessage = TempData["ContactUpdatedMessage"]?.ToString();
+            query = (query ?? string.Empty).Trim();
+            if (query.Length < 3)
+                return Json(new { items = Array.Empty<object>(), hasMore = false });
 
-            return model;
-        }
+            var effectiveTake = take <= 0 ? 5 : take;
+            var matches = await _service.SearchAvailableClientsAsync(
+                contactId,
+                query,
+                skip < 0 ? 0 : skip,
+                effectiveTake + 1);
 
-        private async Task<IActionResult> ReloadEditView(ContactUpdateViewModel model)
-        {
-            var editModel = await LoadEditModel(model.Id);
-            if (editModel == null)
-                return NotFound();
+            var hasMore = matches.Count > effectiveTake;
+            var items = matches.Take(effectiveTake);
 
-            editModel.Name = model.Name;
-            editModel.Surname = model.Surname;
-            editModel.Email = model.Email;
-
-            return View("Edit", editModel);
+            return Json(new { items, hasMore });
         }
     }
 }

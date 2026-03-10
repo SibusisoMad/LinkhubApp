@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using LinkHub.Domain.Models;
+using LinkHub.Application.Dtos;
 
 namespace LinkHub.Application.Interfaces
 {
@@ -12,5 +13,7 @@ namespace LinkHub.Application.Interfaces
 
         Task LinkClientAsync(int contactId, int clientId);
         Task UnlinkClientAsync(int contactId, int clientId);
+
+        Task<IEnumerable<ClientDto>> SearchAvailableClientsAsync(int contactId, string query, int skip, int take);
     }
 }

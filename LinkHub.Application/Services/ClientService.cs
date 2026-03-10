@@ -85,6 +85,27 @@ namespace LinkHub.Application.Services
             await _clientContactRepository.UnlinkAsync(client.Id, contact.Id);
         }
 
+        public async Task<IEnumerable<ContactDto>> SearchAvailableContactsAsync(int clientId, string query, int skip, int take)
+        {
+            if (clientId <= 0)
+                throw new ArgumentException("Client id is required.", nameof(clientId));
+
+            if (skip < 0)
+                throw new ArgumentOutOfRangeException(nameof(skip));
+
+            if (take <= 0)
+                throw new ArgumentOutOfRangeException(nameof(take));
+
+            var results = await _contactRepository.SearchAvailableForClientAsync(clientId, query ?? string.Empty, skip, take);
+            return results.Select(c => new ContactDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Surname = c.Surname,
+                Email = c.Email
+            }).ToList();
+        }
+
         
 
         private static ClientDto MapToDto(Client client) => new()

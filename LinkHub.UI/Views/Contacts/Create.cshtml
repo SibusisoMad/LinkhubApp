@@ -6,33 +6,23 @@
 
 <h2>Create Contact</h2>
 
-
-@if (TempData["SuccessMessage"] != null)
-{
-    <div id="successModal" class="modal" tabindex="-1" style="display:block; background:rgba(0,0,0,0.3);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-success text-white">
-                <div class="modal-header">
-                    <h5 class="modal-title">Success</h5>
-                </div>
-                <div class="modal-body">
-                    <p>@TempData["SuccessMessage"]</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" onclick="closeModalAndRedirect()">Close</button>
-                </div>
+<div class="modal fade" id="contactCreateSuccessModal" tabindex="-1" aria-labelledby="contactCreateSuccessModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-success text-white">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contactCreateSuccessModalLabel">Success</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="contactCreateSuccessModalBody">Contact created.</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
-    <script>
-        function closeModalAndRedirect() {
-            document.getElementById('successModal').style.display = 'none';
-            window.location.href = '/Contacts/List';
-        }
-    </script>
-}
+</div>
 
-<form asp-action="Create" method="post" class="mt-4">
+<form asp-action="Create" method="post" class="mt-4" data-ajax="true" data-ajax-redirect="false" id="contactCreateForm">
+    <div class="alert alert-danger d-none" data-ajax-error role="alert"></div>
     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
     <div class="mb-3">
         <label asp-for="Name" class="form-label"></label>
@@ -54,4 +44,27 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        $(function () {
+            $('#contactCreateForm').on('ajax:success', function (e, response) {
+                if (!response || response.success !== true) return;
+
+                var redirectUrl = response.redirectUrl || '/contacts/list';
+
+                var modalEl = $('#contactCreateSuccessModal').get(0);
+                if (!modalEl) {
+                    $(location).attr('href', redirectUrl);
+                    return;
+                }
+
+                var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.show();
+
+                window.setTimeout(function () {
+                    $(location).attr('href', redirectUrl);
+                }, 1200);
+            });
+        });
+    </script>
 }
